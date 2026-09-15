@@ -52,6 +52,22 @@ ENFORCED | DETECTABLE | ADVISORY | UNSUPPORTED
 
 이 단계 결과가 문서 가정과 다르면 다음 phase보다 먼저 architecture claim을 수정한다.
 
+항목별 실패 대응:
+
+- **headless/cwd/output/exit가 UNSUPPORTED**: 진짜 blocker. 아래 의사결정 순서를 따른다.
+- **그 외 항목이 UNSUPPORTED/ADVISORY**: degrade — capability report에 반영하고 Controller-side enforcement(policy gate, post-run diff 등)로 보완한다. Phase를 막지 않는다.
+
+의사결정 순서(blocker 발생 시):
+
+```text
+1. invocation mode 대체(headless flag, pipe/stdin mode 등)
+2. degraded 등급 항목만 포기하고 진행
+3. 사내 승인된 대체 runtime 조사 후 adapter 교체
+4. 모두 불가하면 명시적 중단 조건과 함께 중단
+```
+
+외부 API나 model gateway로 조용히 전환하지 않는다(01 비목표).
+
 ## 3. Phase 0.5 — Task / State / Artifact Foundation
 
 - TaskSpec schema/freeze/hash
@@ -170,6 +186,8 @@ ENFORCED | DETECTABLE | ADVISORY | UNSUPPORTED
 - permission grant
 - verification floor 하향
 
+cross-project user briefing(개인비서형 진입)은 Phase 6 완료 조건이 아니며 후순위다(§16 참조).
+
 ## 12. Phase 7 — Skill Intake
 
 - validate/audit/stage/approve
@@ -221,6 +239,8 @@ Phase 0 ~ Phase 6
 - auto merge
 - full GUI
 - external model gateway
+- 장기 자가학습 memory/wiki (auto-extraction)
+- cross-project user briefing / personal inbox agent
 
 ## 17. 첫 end-to-end 기준
 

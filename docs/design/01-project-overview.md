@@ -48,6 +48,8 @@ Agent Forge
 8. Reviewer/Verifier 결과가 정책을 만족할 때만 완료한다.
 9. 모든 상태와 판단 근거가 재현 가능한 artifact로 남는다.
 
+project가 지정되지 않은 cross-project 대화형 진입은 후순위 기능이며 위 성공 기준에 포함되지 않는다.
+
 ## 3. 비목표
 
 초기 단계에서 다음은 목표가 아니다.

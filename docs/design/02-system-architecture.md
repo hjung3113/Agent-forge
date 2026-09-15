@@ -68,6 +68,16 @@
 
 Controller는 가능한 한 deterministic code로 구현한다.
 
+### Cross-task Status Query (optional)
+
+project를 지정하지 않은 진입을 지원하려면 Controller/Registry가 소유하는 read-only 조회 capability가 필요하다.
+
+- LLM이 관여하지 않는다.
+- 범위: 진행 중/대기/최근 완료 Task, RunAttempt 상태, 최근 event, 등록 project 목록.
+- 상태를 변경하지 않으며 control plane이 아니다.
+
+이 조회 결과는 [04-orchestration-runtime.md](04-orchestration-runtime.md)의 Orchestrator `user-briefing` mode 입력으로만 소비된다.
+
 ## 3. Controller를 trusted computing base로 본다
 
 Agent Forge의 security/completion claim은 결국 Controller correctness에 의존한다.

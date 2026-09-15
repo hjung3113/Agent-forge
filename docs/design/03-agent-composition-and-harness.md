@@ -148,6 +148,8 @@ Context는 무조건 union하지 않고 budget/trust/relevance로 선택한다.
 
 ### 4.6 Conflict
 
+Learned memory([05-project-workspace-and-context.md](05-project-workspace-and-context.md)의 Learned Memory)는 이 merge model에 직접 참여하지 않는다. Skill/Domain/Project로 승격된 내용만 위 규칙으로 합성된다.
+
 명시적 모순은 자동 추정하지 않고 fail-fast 한다.
 
 예:
@@ -228,6 +230,8 @@ REFERENCE_CONTENT
 ```
 
 arbitrary source/README/comment는 REFERENCE_CONTENT다.
+
+Agent Forge가 생성하는 harness artifact는 격리된 staging 경로에만 두고 worktree source를 overlay/overwrite하지 않는다. Runtime provider가 REFERENCE_CONTENT/TRUSTED_PROJECT_INSTRUCTION 경로를 자동 로드해 compiled harness와 충돌하면 자동 병합하지 않고 compatibility warning을 남기거나 fail-fast한다.
 
 ## 9. Output Contract
 

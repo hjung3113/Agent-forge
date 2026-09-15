@@ -31,6 +31,7 @@ Worker가 Controller와 동일 OS identity로 unrestricted host access를 가진
 - remote write
 - migration/reset
 - unexpected package/tool install
+- worktree 내 git config 변경 또는 hook-path 지정 ([05-project-workspace-and-context.md](05-project-workspace-and-context.md) §10의 canonical cache gitdir 변조 차단)
 
 문자열 denylist는 보조 방어다.
 

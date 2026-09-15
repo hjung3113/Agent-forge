@@ -193,6 +193,7 @@ Safety question:
 ```text
 outside-worktree write/read
 Controller store path access/tamper attempt
+canonical repo config/hook/ref tamper via worktree gitdir-link
 symlink traversal
 HOME/SSH/Git credential access
 env leakage

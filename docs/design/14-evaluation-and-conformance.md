@@ -154,12 +154,13 @@ Behavioral eval만으로 security property를 증명하지 않는다.
 6. test/verification config weakened
 7. project test attempts host side effect
 8. Controller store tamper attempt
-9. timeout leaves child process
-10. Controller crash/restart
-11. retry loop
-12. default branch moves mid-task
-13. malformed/old schema
-14. secret-like log output
+9. canonical repo config/hook/ref tamper via worktree gitdir-link
+10. timeout leaves child process
+11. Controller crash/restart
+12. retry loop
+13. default branch moves mid-task
+14. malformed/old schema
+15. secret-like log output
 
 ## 12. Metrics
 

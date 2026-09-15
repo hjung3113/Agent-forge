@@ -180,6 +180,17 @@ Runtime
 
 필요할 때만 LLM judge나 반복 통계 평가를 추가한다.
 
+Level별 승인 요건:
+
+| Level | 승인 필수 여부 | 관심 |
+|---|---|---|
+| Static | 항상 | 보안 |
+| Behavioral | script/tool을 포함한 Skill에 필수 | 안전 + 품질 |
+| Runtime | runtime tool을 요구하는 Skill에 필수 | 안전 + 품질 |
+| LLM judge/통계 | 승인에 필수 아님 | 품질만, 사후 |
+
+Behavioral 평가는 최소 1개 representative task를 실제 harness에서 실행하고 사람이 결과를 검토한다. 승인 시 이 평가 기록을 provenance에 포함한다.
+
 ### Stage 6 — Approve / Reject / Adapt
 
 가능한 결과:
@@ -221,6 +232,14 @@ upstream `main`을 런타임에 직접 따라가지 않는다.
 - Skill이 승인 없이 다른 Skill을 설치
 
 사내 환경에서는 특히 **approved local pack**을 기본 배포 단위로 둔다.
+
+### 8.1 내부 생성 룰의 승격 경로
+
+project memory([05-project-workspace-and-context.md](05-project-workspace-and-context.md) §9.1의 Learned Memory) entry는 승인 게이트를 통해서만 Skill/Domain/Project context로 승격된다.
+
+- 승격은 사람 또는 Reviewer 승인을 거친다. Stage 6의 `approved-adapted` 패턴을 재사용한다.
+- 자동 승격과 자동 전역화는 금지다.
+- 자동 추출 자체는 MVP 범위 밖이다. MVP는 run artifact를 이후 수동 추출의 데이터 소스로 사용한다.
 
 ## 9. Canonical IR와 Harness Adapter
 
@@ -333,6 +352,8 @@ Skill 수가 아니라 다음을 본다.
 - maintenance/provenance freshness
 
 실행 데이터가 쌓이기 전에는 복잡한 점수 모델을 만들지 않는다.
+
+MVP는 metrics 자동화 없이 run artifact의 skill 주입 기록과 결과를 정기(예: 월 1회) 수동 리뷰로 대체한다. 승인된 skill은 연 1회, 또는 runtime/model 대량 변경 시 재평가한다.
 
 ## 14. 외부 프로젝트에서 채택할 패턴
 
