@@ -55,7 +55,8 @@ Agent Forge의 기본 원칙은 다음과 같다.
 6. [Safety, Verification & Observability](docs/design/06-safety-verification-and-observability.md)
 7. [Agent Registry & Extension](docs/design/07-agent-registry-and-extension.md)
 8. [ForgeRoom Reuse Analysis](docs/reference/forgeroom-reuse-analysis.md)
-9. [MVP Roadmap](docs/roadmap/mvp-roadmap.md)
+9. [Architecture Review](docs/review/architecture-review.md)
+10. [MVP Roadmap](docs/roadmap/mvp-roadmap.md)
 
 ## 현재 상태
 
