@@ -43,11 +43,15 @@ RUNNING -> TIMED_OUT | CANCELLED | LOST
 
 Controller만 canonical state transition을 기록한다.
 
-TaskSpec lifecycle([11-task-contract-and-change-control.md](11-task-contract-and-change-control.md) §3, `DRAFT -> NORMALIZED -> FROZEN`)은 artifact 상태이며 위 Task/Step/RunAttempt 상태와 별개 entity다. Task가 `READY`가 되려면 `FROZEN` TaskSpec(task_spec_hash)과 VerificationPlan이 이미 존재해야 하고, RunAttempt `CREATED`는 참조하는 task_spec_hash를 요구한다.
+TaskSpec lifecycle([11-task-contract-and-change-control.md](11-task-contract-and-change-control.md) §3, `DRAFT -> NORMALIZED -> FROZEN`)은 artifact 상태이며 위 Task/Step/RunAttempt 상태와 별개 entity다. 두 lifecycle이 각각 `DRAFT`/`FROZEN` 이름을 갖지만 독립적으로 움직이는 두 개의 mutable state source가 아니다: **`Task.FROZEN`은 `TaskSpec.FROZEN`의 derived projection**이다. Task는 자신의 `FROZEN` 상태를 별도로 설정하지 않으며, 연결된 TaskSpec이 `FROZEN`이 되는 순간 Task도 `FROZEN`으로 전이한다. Task가 `READY`가 되려면 `FROZEN` TaskSpec(task_spec_hash)과 VerificationPlan이 이미 존재해야 하고, RunAttempt `CREATED`는 참조하는 task_spec_hash를 요구한다.
 
 ### IntakeSession
 
-TaskSpec이 아직 없는 project-미지정 진입(cross-project briefing)은 Task/Step/RunAttempt 어디에도 속하지 않는 별도 entity다. TaskSpec 없음, worktree 없음, Attempt-retry/budget 모델 적용 없음. 출력은 `SuggestedTask[]` artifact다. 사용자 확인 후에만 이로부터 `11`의 DRAFT TaskSpec이 생성되고, 그 뒤부터 위 Task 상태 모델이 시작된다.
+TaskSpec이 아직 없는 project-미지정 진입(cross-project briefing, 후순위 기능)은 Task/Step/RunAttempt 어디에도 속하지 않는 별도 entity다. TaskSpec 없음, worktree 없음, Attempt-retry/budget 모델 적용 없음.
+
+IntakeSession은 **ephemeral/non-canonical**이다. §12 Artifact producer/provenance의 `task/step/attempt id` 요구, canonical state store의 durability/recovery 보장, §4 atomic transition 규칙 중 어느 것도 IntakeSession에는 적용되지 않는다. 출력 `SuggestedTask[]`는 evidence가 아니라 제안이며, replay/audit 대상이 아니다. 이 범위 제한이 유지되는 한 IntakeSession은 별도 schema 확장 없이 존재할 수 있다 — canonical state/event/artifact 모델에 새 필드를 추가하지 않는다.
+
+사용자 확인 후에만 이로부터 `11`의 DRAFT TaskSpec이 생성되고, 그 순간부터 canonical Task 상태 모델과 §12 provenance 요구가 시작된다.
 
 ## 4. Atomic transition
 

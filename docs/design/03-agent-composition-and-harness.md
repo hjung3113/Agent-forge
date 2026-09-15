@@ -197,7 +197,7 @@ system:
     network: none
 ```
 
-Resolved capability에는 값뿐 아니라 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4의 4단계(`ENFORCED | DETECTABLE | ADVISORY | UNSUPPORTED`) enforcement level을 저장한다.
+Resolved capability에는 값뿐 아니라 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4의 `backend_support`와 `effective_enforcement`(4단계: `ENFORCED | DETECTABLE | ADVISORY | UNSUPPORTED`)를 함께 저장한다.
 
 ## 7. Skill 주입
 
@@ -249,7 +249,7 @@ TaskSpec hash
 
 를 input manifest에 기록한다.
 
-required capability 중 하나라도 enforcement level이 `UNSUPPORTED`([12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4)면 BLOCKED다.
+required capability 중 하나라도 `effective_enforcement`가 `UNSUPPORTED`([12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4)면 BLOCKED다. `backend_support`만 `UNSUPPORTED`이고 Controller-side 보완으로 `effective_enforcement`가 올라간 경우는 BLOCKED가 아니다.
 
 LLM result 자체는 deterministic replay를 보장하지 않는다.
 

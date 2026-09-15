@@ -191,7 +191,8 @@ task/run artifact는 남지만 세션 간에 자동으로 이어붙는 layer는 
 
 - 모든 entry는 evidence(run/attempt id), 생성일, scope, expiry/재검토 주기를 포함한다.
 - check 실패 또는 policy_violation으로 끝난 RunAttempt는 "효과적 패턴" entry의 근거가 될 수 없다.
-- 상충하는 entry가 함께 resolve되면 fail-closed한다.
+- 상충하는 entry가 함께 resolve되면 **quarantine/deselect**한다: 상충하는 entry 전부를 이번 selection에서 제외하고 경고를 남기며, 필요하면 project-expert 등으로 re-grounding한다. Learned Memory는 ADVISORY/REFERENCE_CONTENT이므로 그 자체의 상충이 RunAttempt 실행을 막는 근거(fail-closed veto)가 되지 않는다 — non-authoritative context가 control-plane 판단을 대신하지 않는다.
+- 예외적으로 TaskSpec이 특정 memory entry를 명시적으로 요구하는 경우에만, 그 entry의 상충은 manual-required/blocking으로 승격할 수 있다.
 
 자동 추출은 MVP 범위 밖이다. MVP는 §11 post-run 결과와 run artifact를 이후 수동 추출의 데이터 소스로 사용한다.
 
@@ -235,7 +236,7 @@ git 기반 탐지의 알려진 사각지대:
 | ignored 경로 write | 기본 불가 | `git status --ignored` 또는 중요 경로 사전 manifest 비교 |
 | 신규 symlink 생성 | 가능(mode change) | - |
 | 기존 symlink 경유 worktree 밖 write | 불가 | worktree root를 realpath로 해석, 밖을 가리키는 symlink는 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) Filesystem 정책에서 deny |
-| secret 파일 read | 불가(읽기는 흔적이 없음) | mtime/hash 변화만 감시 가능 |
+| secret 파일 read | 불가(읽기는 mtime/hash를 바꾸지 않으므로 일반 read 탐지 수단이 없음) | git 기반 탐지로는 `UNSUPPORTED`/`ADVISORY`([12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4)로 취급. 실제 read 탐지가 필요하면 OS audit log/ACL/sandbox 같은 별도 `ENFORCED`/`DETECTABLE` 수단을 요구한다 |
 
 원격/NFS mount 등 탐지 신뢰도를 담보할 수 없는 filesystem에서는 write 가능한 RunAttempt를 fail-closed로 처리한다.
 

@@ -237,7 +237,7 @@ upstream `main`을 런타임에 직접 따라가지 않는다.
 
 project memory([05-project-workspace-and-context.md](05-project-workspace-and-context.md) §9.1의 Learned Memory) entry는 승인 게이트를 통해서만 Skill/Domain/Project context로 승격된다.
 
-- 승격은 사람 또는 Reviewer 승인을 거친다. Stage 6의 `approved-adapted` 패턴을 재사용한다.
+- Reviewer는 승격을 직접 승인하지 않는다. Reviewer 출력은 **promotion recommendation**(finding 형식, `02`의 semantic decision 범주)일 뿐이다. 실제 승격 적용은 operator 승인 또는 Controller의 명시적 deterministic policy gate가 수행한다 — execution-plane 판단(Reviewer)이 control-plane authority(registry 승격)를 직접 바꾸지 않는다는 원칙과 일치시킨다. Stage 6의 `approved-adapted` 패턴에서 "승인자"는 operator/Controller gate로 한정한다.
 - 자동 승격과 자동 전역화는 금지다.
 - 자동 추출 자체는 MVP 범위 밖이다. MVP는 run artifact를 이후 수동 추출의 데이터 소스로 사용한다.
 

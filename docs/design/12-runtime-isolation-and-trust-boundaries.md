@@ -67,6 +67,15 @@ backend가 capability 자체를 제공하지 않음. degrade가 아니라 부재
 
 강한 이름을 쓰더라도 enforcement level을 별도로 저장한다. canonical enforcement level은 이 네 단계(`ENFORCED / DETECTABLE / ADVISORY / UNSUPPORTED`)이며 다른 문서는 이 절을 참조한다.
 
+### backend_support와 effective_enforcement
+
+capability report는 두 값을 분리해 기록한다.
+
+- `backend_support`: runtime/adapter가 그 capability를 원래 제공하는지에 대한 raw 값.
+- `effective_enforcement`: Controller-side 보완(policy gate, post-run diff/status 조회, env allowlist 등)을 적용한 뒤 실제로 성립하는 수준.
+
+`backend_support = UNSUPPORTED`라도 Controller-side 수단으로 `DETECTABLE`/`ADVISORY` 수준을 만들 수 있으면 `effective_enforcement`는 그 값으로 올라간다. headless 실행처럼 Controller-side로 보완할 수단이 없는 capability는 `backend_support`와 `effective_enforcement`가 항상 같다. §5의 BLOCKED 판정은 `effective_enforcement` 기준이다.
+
 ## 5. Required vs Granted
 
 Skill/Task는 permission을 부여하지 않는다.
@@ -83,7 +92,7 @@ effective_grant
 required <= effective_grant
 ```
 
-가 아니면 BLOCKED다. `required` capability의 enforcement level이 `UNSUPPORTED`인 경우도 동일하게 BLOCKED다.
+가 아니면 BLOCKED다. `required` capability의 `effective_enforcement`가 `UNSUPPORTED`인 경우도 동일하게 BLOCKED다. `backend_support`가 `UNSUPPORTED`라도 Controller-side 보완으로 `effective_enforcement`가 올라갔다면 BLOCKED가 아니다.
 
 ## 6. Instruction trust
 

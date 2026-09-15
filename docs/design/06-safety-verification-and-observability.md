@@ -186,9 +186,9 @@ verification.failed
 task.completed
 ```
 
-`intake.started` / `intake.suggested`([13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md)의 IntakeSession)는 별도 이벤트 계열이며 `attempt.*`와 섞지 않는다. TaskSpec이 없는 활동이기 때문이다.
+`intake.started` / `intake.suggested`([13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md)의 IntakeSession)는 별도 이벤트 계열이며 `attempt.*`와 섞지 않는다. TaskSpec이 없는 활동이기 때문이다. IntakeSession은 ephemeral/non-canonical이므로 이 두 이벤트는 `task/step/attempt id`를 갖지 않으며, 아래 canonical event durability 보장의 대상이 아니다(관측용 best-effort 신호).
 
-Event에는 task/step/attempt id, actor, timestamp, reason, schema version을 포함한다.
+`task.*` / `step.*` / `attempt.*` / `check.*` / `verification.*` canonical event에는 task/step/attempt id, actor, timestamp, reason, schema version을 포함한다.
 
 UI는 event/state의 derived view다.
 

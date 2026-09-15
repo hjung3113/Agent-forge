@@ -35,7 +35,7 @@ Runtime/Check capability spike
 - project test/build script host side effect
 - concurrency/runtime config collision
 
-모든 capability를:
+모든 capability를 [12-runtime-isolation-and-trust-boundaries.md](../design/12-runtime-isolation-and-trust-boundaries.md) §4의 `backend_support`(raw)와 `effective_enforcement`(Controller-side 보완 적용 후) 두 값으로, 각각:
 
 ```text
 ENFORCED | DETECTABLE | ADVISORY | UNSUPPORTED
@@ -54,8 +54,8 @@ ENFORCED | DETECTABLE | ADVISORY | UNSUPPORTED
 
 항목별 실패 대응:
 
-- **headless/cwd/output/exit가 UNSUPPORTED**: 진짜 blocker. 아래 의사결정 순서를 따른다.
-- **그 외 항목이 UNSUPPORTED/ADVISORY**: degrade — capability report에 반영하고 Controller-side enforcement(policy gate, post-run diff 등)로 보완한다. Phase를 막지 않는다.
+- **headless/cwd/output/exit가 UNSUPPORTED**: Controller-side로 보완할 수단이 없어 `backend_support`와 `effective_enforcement`가 항상 같다. `effective_enforcement = UNSUPPORTED`이므로 진짜 blocker. 아래 의사결정 순서를 따른다.
+- **그 외 항목이 backend_support = UNSUPPORTED/ADVISORY**: Controller-side enforcement(policy gate, post-run diff 등)를 적용해 `effective_enforcement`를 재계산한다. `effective_enforcement`가 여전히 `UNSUPPORTED`인 required capability만 blocker([12-runtime-isolation-and-trust-boundaries.md](../design/12-runtime-isolation-and-trust-boundaries.md) §5)이고, 그 외에는 degrade로 capability report에 반영하고 Phase를 막지 않는다.
 
 의사결정 순서(blocker 발생 시):
 
