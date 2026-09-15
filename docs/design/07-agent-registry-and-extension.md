@@ -80,7 +80,7 @@ produce ResolvedAgentProfile
 list()
 get(agent_id)
 validate(agent_id)
-resolve(agent_id, task_context)
+resolve(agent_id, task_spec_hash)
 ```
 
 `resolve()` 결과는 실행 전에 artifact로 저장한다.
@@ -97,7 +97,11 @@ Orchestrator에게 전체 profile 내용을 넣을 필요는 없다. Registry가
   "description": "Standard Log domain analysis",
   "capabilities": ["carryover", "context", "start-end-matching"],
   "project": null,
-  "write_capable": false
+  "requires": {
+    "filesystem_write": "none",
+    "shell": ["read"],
+    "network": "none"
+  }
 }
 ```
 
@@ -130,6 +134,8 @@ name
  -> validate references
  -> create agents/<id>/agent.yaml
 ```
+
+permission override는 [03-agent-composition-and-harness.md](03-agent-composition-and-harness.md) §4.2 grant ceiling을 더 제한하는 방향으로만 적용할 수 있다. Role/Harness ceiling을 넘어서는 확장은 override로 만들 수 없다.
 
 Agent CLI가 skill이나 project 내용을 자동 복제하지 않는다.
 
@@ -197,7 +203,7 @@ Project가 등록되면 기본 Project Expert를 논리적으로 생성할 수 �
 ```text
 role = project-expert
 project = <project-id>
-permissions = read_only
+requires.filesystem_write = none
 skills = project.default_analysis_skills
 ```
 
@@ -214,7 +220,7 @@ standard-log-expert
 ```text
 role = domain-expert
 domain = standard-log
-permissions = read_only
+requires.filesystem_write = none
 ```
 
 이 방식이면 Agent 수를 늘려도 설정 중복이 작다.
@@ -240,13 +246,13 @@ permissions = read_only
 
 ## 12. Versioning
 
-Agent/Skill/Harness 정의가 변경되면 과거 Run을 재현하기 위해 실행 시 snapshot을 남긴다.
+Agent/Skill/Harness 정의가 변경되면 과거 RunAttempt를 재현하기 위해 실행 시 snapshot을 남긴다. snapshot 내용의 canonical 정의는 [13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md) §15 Input Manifest(`task_spec_hash`, `base_commit`, `resolved_harness_hash`, `skill_hashes`, `project_profile_hash`, capability report 등)를 따른다.
 
 ```text
-run R-123
+attempt A-123
+  input-manifest.json
   resolved-agent.yaml
   resolved-harness.yaml
-  skill-manifest.json
 ```
 
 Registry의 현재 파일만 보고 과거 실행을 해석하지 않는다.
@@ -271,5 +277,5 @@ Registry의 현재 파일만 보고 과거 실행을 해석하지 않는다.
 2. Agent definition은 composition reference 중심으로 얇게 유지한다.
 3. Registry validation 실패는 실행 전에 발견한다.
 4. 동적 Agent 선택과 실제 권한 enforcement를 분리한다.
-5. 과거 Run은 resolved snapshot으로 재현 가능해야 한다.
+5. 과거 RunAttempt는 resolved snapshot으로 재현 가능해야 한다.
 6. 사용자 추가 profile은 system hard policy를 완화할 수 없다.

@@ -39,6 +39,11 @@ Orchestrator는 다음을 할 수 있다.
 - canonical task/run state 기록
 - 검증 없이 DONE 선언
 
+### 2.1 Orchestrator modes
+
+- **task-orchestration**(기본): 이 문서의 나머지 규칙 전체가 적용되는 단일 TaskSpec 루프.
+- **user-briefing**: project가 지정되지 않은 진입 mode. 입력에 [02-system-architecture.md](02-system-architecture.md)의 Cross-task Status Query 결과가 포함된다. 출력은 DelegateRequest가 아니라 사용자 확인이 필요한 제안 Task 목록이다. briefing mode는 spawn/write/worktree 생성을 하지 않으며, 여러 project에 대한 구현 DelegateRequest를 발행하지 않는다. 사용자 확인 후에만 새 TaskSpec이 만들어지고 task-orchestration 루프가 이어받는다.
+
 ## 3. Controller 책임
 
 Controller가 소유한다.
@@ -214,6 +219,8 @@ Frozen TaskSpec summary/hash
 ```
 
 과거 실패 Attempt의 원문은 필요할 때만 읽는다.
+
+rolling task summary는 task 종료 시 archive된다. 다음 Task의 기본 context로 이어지지 않는다. 세션 간 이어짐이 필요하면 [05-project-workspace-and-context.md](05-project-workspace-and-context.md) §9.1 Learned Memory와 그 승격 경로로만 다룬다.
 
 ## 14. 완료 조건
 

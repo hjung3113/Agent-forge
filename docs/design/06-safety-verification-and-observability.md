@@ -31,6 +31,7 @@ Worker가 Controller와 동일 OS identity로 unrestricted host access를 가진
 - remote write
 - migration/reset
 - unexpected package/tool install
+- worktree 내 git config 변경 또는 hook-path 지정 ([05-project-workspace-and-context.md](05-project-workspace-and-context.md) §10의 canonical cache gitdir 변조 차단)
 
 문자열 denylist는 보조 방어다.
 
@@ -56,15 +57,7 @@ Worker가 Controller와 동일 OS identity로 unrestricted host access를 가진
 
 ## 4. Capability level
 
-모든 security 관련 capability는:
-
-```text
-ENFORCED
-DETECTABLE
-ADVISORY
-```
-
-중 하나로 보고한다.
+모든 security 관련 capability는 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4의 canonical 4단계(`ENFORCED / DETECTABLE / ADVISORY / UNSUPPORTED`) 중 하나로 보고한다.
 
 Prompt의 `read-only`는 자동으로 ENFORCED가 아니다.
 
@@ -193,7 +186,9 @@ verification.failed
 task.completed
 ```
 
-Event에는 task/step/attempt id, actor, timestamp, reason, schema version을 포함한다.
+`intake.started` / `intake.suggested`([13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md)의 IntakeSession)는 별도 이벤트 계열이며 `attempt.*`와 섞지 않는다. TaskSpec이 없는 활동이기 때문이다. IntakeSession은 ephemeral/non-canonical이므로 이 두 이벤트는 `task/step/attempt id`를 갖지 않으며, 아래 canonical event durability 보장의 대상이 아니다(관측용 best-effort 신호).
+
+`task.*` / `step.*` / `attempt.*` / `check.*` / `verification.*` canonical event에는 task/step/attempt id, actor, timestamp, reason, schema version을 포함한다.
 
 UI는 event/state의 derived view다.
 

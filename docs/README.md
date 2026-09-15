@@ -97,7 +97,7 @@ ADR에는 가능하면 `status`, `supersedes`, `superseded_by`를 둔다.
 
 - authority/state/trust boundary/public contract 변경은 design 문서와 같이 반영한다.
 - 같은 사실을 여러 문서에서 재정의하지 않는다.
-- security claim은 threat model과 `ENFORCED / DETECTABLE / ADVISORY`를 구분한다.
+- security claim은 threat model과 `ENFORCED / DETECTABLE / ADVISORY / UNSUPPORTED`를 구분한다.
 - `Controller-owned`와 `physically tamper-proof`를 동의어로 쓰지 않는다.
 - CheckRunner도 project code를 실행할 수 있으므로 execution plane으로 본다.
 - 외부 Skill은 승인 전 untrusted다.
@@ -111,7 +111,8 @@ ADR에는 가능하면 `status`, `supersedes`, `superseded_by`를 둔다.
 - **Step**: 논리 작업 단위.
 - **RunAttempt**: Step의 runtime 실행 1회.
 - **Controller Artifact Store**: Controller가 canonical evidence namespace로 관리하는 저장 영역. 실제 tamper resistance는 isolation level에 따름.
-- **Capability Enforcement Level**: ENFORCED / DETECTABLE / ADVISORY.
+- **Capability Enforcement Level**: ENFORCED / DETECTABLE / ADVISORY / UNSUPPORTED ([12](design/12-runtime-isolation-and-trust-boundaries.md) §4가 canonical).
 - **Workspace Lease**: writer concurrency 제어.
 - **Runner Trust Class**: controller_builtin / external_tool / project_command.
+- **Instruction Trust Class**: CONTROL / TRUSTED_PROJECT_INSTRUCTION / REFERENCE_CONTENT ([12](design/12-runtime-isolation-and-trust-boundaries.md) §6이 canonical).
 - **Runtime Backend**: coding agent backend. 초기 OpenCode.

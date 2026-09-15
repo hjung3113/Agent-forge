@@ -37,6 +37,7 @@ TaskSpec = 이번 실행의 frozen 목표/scope/AC
 - TaskSpec 초안/decomposition/next action 제안
 - DelegateRequest
 - Amendment proposal
+- user_situation_view 소비(optional, `user-briefing` mode에서만, Controller가 조립)
 
 금지:
 
@@ -45,6 +46,9 @@ TaskSpec = 이번 실행의 frozen 목표/scope/AC
 - permission grant
 - canonical state transition
 - DONE 기록
+- `user-briefing` IntakeSession([13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md))에서 여러 project에 대한 구현 DelegateRequest 발행
+
+`user-briefing`은 별도 Role이 아니라 같은 Orchestrator Role의 다른 mode다. 이 기능은 기존 Role과 authority/write boundary가 다르지 않으므로 §2의 새 Role 추가 기준을 충족하지 않는다. mode 세부는 [04-orchestration-runtime.md](04-orchestration-runtime.md)의 Orchestrator modes를 따른다.
 
 ### Project Expert
 
@@ -53,6 +57,8 @@ TaskSpec = 이번 실행의 frozen 목표/scope/AC
 - unknown/implementation risk
 
 README intent와 code reality를 구분한다.
+
+산출 형식이 반복 실행에서 불안정하다고 관측되면(verified facts/unknown 구분 실패, evidence path 누락) grounding 절차를 전용 `codebase-grounding` Skill로 승격한다. 이는 roadmap 타이밍이 아니라 이 Role 계약 위반에 대한 트리거다.
 
 ### Domain Expert
 
@@ -176,6 +182,7 @@ output_contract: review-v1
 5. Project/Domain 중복 제거
 6. Reviewer에는 구현 서사 최소화
 7. arbitrary repository content를 instruction으로 승격하지 않음
+8. Learned memory([05-project-workspace-and-context.md](05-project-workspace-and-context.md) §9.1)는 Skill처럼 on-demand/selected로만 주입하고 always-on으로 넣지 않음
 
 ## 7. Role Activation
 
