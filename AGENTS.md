@@ -87,3 +87,17 @@ MVP 기본 포함:
 authority, state machine, TaskSpec, trust boundary, capability enforcement, verification floor, artifact provenance가 바뀌면 관련 design 문서를 같은 변경에서 갱신한다.
 
 반복되는 review finding은 prompt rule로만 남기지 말고 deterministic check/eval로 승격 가능한지 확인한다.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues (hjung3113/Agent-forge), using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default canonical labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
