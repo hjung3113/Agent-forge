@@ -1,0 +1,298 @@
+# 13. State, Recovery & Artifact Integrity
+
+## 1. 목적
+
+Agent Forge가 신뢰 가능한 control plane이 되려면 LLM 결과보다 먼저 **상태 전이와 evidence provenance**가 안정적이어야 한다.
+
+이 문서는 Task/Step/RunAttempt, crash recovery, lease, Controller Artifact Store를 정의한다.
+
+## 2. Canonical hierarchy
+
+```text
+Task
+  -> Step
+      -> RunAttempt
+```
+
+Retry는 새 RunAttempt이며 과거 Attempt를 덮어쓰지 않는다.
+
+## 3. 상태 모델
+
+### Task
+
+```text
+DRAFT -> FROZEN -> READY -> RUNNING -> VERIFYING
+                                    -> BLOCKED | FAILED | CANCELLED
+VERIFYING -> DONE | BLOCKED | FAILED
+```
+
+### Step
+
+```text
+PENDING -> READY -> RUNNING
+                  -> SUCCEEDED | FAILED | BLOCKED | CANCELLED | SUPERSEDED
+```
+
+### RunAttempt
+
+```text
+CREATED -> STARTING -> RUNNING -> EXITED -> VALIDATING
+                                      -> SUCCEEDED | FAILED | POLICY_VIOLATION
+RUNNING -> TIMED_OUT | CANCELLED | LOST
+```
+
+Controller만 canonical state transition을 기록한다.
+
+## 4. Atomic transition
+
+상태 전이는 SQLite transaction/CAS(version) 방식으로 중복/경합을 방지한다.
+
+예:
+
+```text
+UPDATE attempts
+SET state='RUNNING', version=version+1
+WHERE id=? AND state='STARTING' AND version=?
+```
+
+cancel과 completion이 경합하면 명시된 transition rule로 하나만 canonical하게 승리한다.
+
+## 5. Authoritative Attempt
+
+Step에는 현재 authoritative result pointer가 있다.
+
+```text
+step.authoritative_attempt_id = A2
+```
+
+이전 실패/취소 artifact는 history로 보존한다.
+
+## 6. Retry contract
+
+기록:
+
+- previous attempt id
+- retry reason
+- delta from previous
+- TaskSpec hash
+- input manifest
+- context/runtime delta
+
+AC를 약화시키는 retry는 금지한다.
+
+## 7. State store
+
+MVP는 SQLite면 충분하다.
+
+개념 table:
+
+```text
+tasks
+steps
+run_attempts
+events
+artifacts
+leases
+```
+
+복잡한 event-sourcing framework는 만들지 않는다.
+
+## 8. Lease / heartbeat
+
+- attempt id
+- controller instance id
+- process identity
+- workspace lease
+- started/heartbeat/timeout
+
+Timeout 계산에는 가능한 한 monotonic clock을 사용하고 audit 표시에는 wall-clock timestamp를 사용한다.
+
+## 9. Startup reconciliation
+
+```text
+STARTING/RUNNING 조회
+ -> process/lease 확인
+ -> workspace 확인
+ -> partial artifacts 확인
+ -> resume / LOST / cleanup
+```
+
+불명확한 상태를 SUCCEEDED로 복구하지 않는다.
+
+## 10. Workspace lease
+
+같은 worktree에 writer 하나가 기본이다.
+
+Reviewer/read-only 병행은 실제 ENFORCED isolation이 가능할 때만 고려한다.
+
+## 11. Controller Artifact Store
+
+Canonical artifact namespace는 worktree와 분리한다.
+
+```text
+~/.agent-forge/
+├─ state/agent-forge.db
+├─ tasks/T-001/
+└─ runs/R-001/
+   ├─ request.json
+   ├─ input-manifest.json
+   ├─ resolved-agent.yaml
+   ├─ resolved-harness.yaml
+   ├─ policy.json
+   ├─ prompt.md
+   ├─ stdout.log
+   ├─ stderr.log
+   ├─ diff.patch
+   ├─ checks/
+   ├─ output.md
+   ├─ artifact-manifest.json
+   └─ result.json
+```
+
+이 store가 canonical이라는 뜻은 **Controller가 어떤 artifact를 state/evidence로 인정할지 결정한다**는 의미다.
+
+같은 OS user의 Worker가 파일시스템 전체에 접근할 수 있다면 경로 분리만으로 physical tamper-proof를 보장하지 않는다.
+
+따라서 artifact manifest에:
+
+```text
+storage_integrity_level: enforced | detectable | advisory
+```
+
+또는 동일한 capability vocabulary를 기록한다.
+
+## 12. Artifact producer / provenance
+
+최소:
+
+```text
+artifact_id
+schema_version
+producer_type
+producer_id
+task/step/attempt id
+created_at
+content_sha256
+input_manifest_hash
+task_spec_hash
+base_commit_sha
+storage_integrity_level
+```
+
+producer 예:
+
+```text
+controller
+runtime-worker
+check-runner
+reviewer
+verifier
+operator
+```
+
+Worker artifact는 유용한 input일 수 있지만 producer type만으로 deterministic evidence가 되지는 않는다.
+
+## 13. Check evidence
+
+CheckRunner가 직접 관찰한:
+
+- registered command id
+- exact args
+- cwd
+- environment/isolation profile
+- tool version
+- start/end
+- exit code
+- captured output
+- source revision
+
+을 기록한다.
+
+`worker says tests passed`는 deterministic evidence가 아니다.
+
+### Runner trust class
+
+check도 구분한다.
+
+```text
+controller_builtin
+  path/hash/static validation
+
+external_tool
+  trusted/pinned analyzer binary
+
+project_command
+  build/test/script from project environment
+```
+
+`project_command`는 exit code를 Controller가 관찰하더라도 command semantics나 실행 안전성이 project source에 영향을 받을 수 있다.
+
+고위험 task에서는 controller-owned fixture/static check 또는 별도 sandbox를 추가할 수 있다.
+
+## 14. Verification config tamper
+
+policy-sensitive:
+
+- test/build config
+- architecture baseline/waiver
+- verification script
+- CI config
+- Agent Forge project instruction
+
+변경 시 stronger review/control check가 필요할 수 있다.
+
+## 15. Input Manifest
+
+```json
+{
+  "task_spec_hash": "...",
+  "base_commit": "...",
+  "resolved_harness_hash": "...",
+  "skill_hashes": ["..."],
+  "project_profile_hash": "...",
+  "agent_forge_revision": "...",
+  "runtime_adapter_version": "...",
+  "runtime_backend_version": "..."
+}
+```
+
+완전 deterministic replay가 아니라 input traceability를 목표로 한다.
+
+## 16. Log safety / quotas
+
+- environment secret 최소화
+- redaction
+- artifact access boundary
+- retention
+- stdout/stderr size limit
+- per-attempt/task disk budget
+- truncation metadata
+
+## 17. Idempotency
+
+side effect에는 idempotency key를 둔다.
+
+```text
+create-workspace:T-001:rev3
+start-attempt:S2:A2
+record-check:A2:test-main
+```
+
+## 18. Schema evolution
+
+Task/state/event/artifact schema는 version을 가진다.
+
+migration은 explicit하고 과거 artifact hash를 조용히 바꾸지 않는다.
+
+## 19. 설계 불변조건
+
+1. Task/Step/RunAttempt를 구분한다.
+2. state transition은 transaction/version guard를 사용한다.
+3. retry는 과거 evidence를 덮어쓰지 않는다.
+4. Controller가 canonical artifact/evidence 인정 authority다.
+5. 저장 경로 분리 자체를 tamper-proof로 과장하지 않는다.
+6. CheckRunner evidence authority와 command execution safety를 구분한다.
+7. Attempt는 exact TaskSpec/base/harness input manifest를 가진다.
+8. restart 시 state를 reconcile한다.
+9. verification config 변경은 policy-sensitive다.
+10. log/artifact도 보안/quota/retention 대상이다.

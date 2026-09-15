@@ -3,243 +3,241 @@
 ## 1. 상위 구조
 
 ```text
-                              User
-                               |
-                               v
-                     +-------------------+
-                     | Orchestrator Agent|
-                     +---------+---------+
-                               |
-                      Spawn / Delegate Req
-                               |
-                               v
-+----------------------------------------------------------------+
-|                    Agent Forge Controller                       |
-|                                                                |
-|  +----------------+   +----------------+   +----------------+   |
-|  | Agent Registry |   | Skill Registry |   |Project Registry|   |
-|  +----------------+   +----------------+   +----------------+   |
-|                                                                |
-|  +----------------+   +----------------+   +----------------+   |
-|  | Task Contract  |   | Scheduler /    |   | Policy / Gate  |   |
-|  | Resolver       |   | State Machine  |   |                |   |
-|  +----------------+   +----------------+   +----------------+   |
-|                                                                |
-|  +----------------+   +----------------+   +----------------+   |
-|  | Harness        |   | Workspace      |   | Result / Event |   |
-|  | Compiler       |   | Manager        |   | Store          |   |
-|  +----------------+   +----------------+   +----------------+   |
-|                                                                |
-|                     +------------------+                       |
-|                     | Runtime Adapter  |                       |
-|                     +---------+--------+                       |
-+-------------------------------|--------------------------------+
-                                v
-                           +----------+
-                           | OpenCode |
-                           +----+-----+
+                               User
                                 |
-            +-------------------+-------------------+
-            |                   |                   |
-            v                   v                   v
-       Project Expert      Implementer         Reviewer/Verifier
-       Worktree A          Worktree B          scoped workspace
+                                v
+                      +--------------------+
+                      | Orchestrator Agent |
+                      +---------+----------+
+                                | semantic proposal
+                                v
++-------------------------------------------------------------------+
+|                    Agent Forge Controller                          |
+|                                                                   |
+|  TaskSpec / Amendment      Registry / Harness Compiler            |
+|  Step / Attempt Scheduler  Policy / Verification Planner          |
+|  State / Lease Manager     Workspace Manager                      |
+|  Runtime Isolation         Runtime Adapter                        |
+|  CheckRunner               Controller Artifact / Event Store      |
++-------------------------------+-----------------------------------+
+                                |
+                                v
+                         OpenCode / Backend
+                                |
+              +-----------------+-----------------+
+              |                 |                 |
+          Project Expert     Implementer       Reviewer
 
-                     Herdr (optional UI)
-                  observes state/process/logs
+                     Herdr = optional observer UI
 ```
 
-## 2. 책임 분리
+## 2. 핵심 책임 경계
 
-### 2.1 Orchestrator Agent
+### Orchestrator
 
-의미 기반 판단을 담당한다.
+의미 판단을 담당한다.
 
-- 사용자 목표 해석
-- task decomposition 제안
-- 어떤 Agent가 필요한지 선택
-- Agent 호출 순서/의존성 제안
-- 실패 결과를 보고 추가 분석 Agent 요청
+- 목표 해석/분해 제안
+- Agent/Role 선택 제안
+- dependency/next action 제안
+- amendment 제안
 
-Orchestrator는 다음을 직접 소유하지 않는다.
+소유하지 않는다.
 
-- subprocess lifecycle
-- worktree 생성/삭제
-- permission enforcement
-- retry budget
-- task state transition
-- 완료 판정의 최종 authority
+- process/worktree lifecycle
+- frozen TaskSpec 변경 authority
+- canonical state transition
+- retry budget override
+- permission grant
+- final completion authority
 
-### 2.2 Controller
+### Controller
 
-Agent Forge의 실제 control plane이다.
+실행 가능성과 canonical state를 소유한다.
 
-- 요청 validation
-- Agent/Profile resolve
-- dependency/concurrency 검사
-- task/step state transition
-- worktree lifecycle
-- runtime process 실행
-- timeout/retry/cancel
-- policy enforcement
-- artifact 수집
-- verification gate
+- TaskSpec normalize/freeze/hash
+- TaskAmendment validation
+- Step/RunAttempt lifecycle
+- registry/profile resolve
+- capability/policy validation
+- workspace/lease
+- runtime process lifecycle
+- check/evidence collection
+- recovery/reconciliation
+- completion gate
 
-Controller는 가능하면 deterministic code로 구현한다.
+Controller는 가능한 한 deterministic code로 구현한다.
 
-### 2.3 Runtime Adapter
+## 3. Controller를 trusted computing base로 본다
 
-Controller와 실제 Agent backend의 경계다.
+Agent Forge의 security/completion claim은 결국 Controller correctness에 의존한다.
 
-초기 구현:
+따라서 Controller core는 작게 유지하고 다음을 분리한다.
+
+```text
+semantic LLM decision
+  !=
+state/policy/evidence authority
+```
+
+Controller가 읽는 untrusted input은 schema validation을 거친다.
+
+## 4. Canonical subdomains
+
+세부 책임은 다음 문서가 소유한다.
+
+```text
+TaskSpec / Amendment
+  -> 11-task-contract-and-change-control.md
+
+Runtime trust / capability enforcement
+  -> 12-runtime-isolation-and-trust-boundaries.md
+
+Task-Step-RunAttempt / recovery / artifact provenance
+  -> 13-state-recovery-and-artifact-integrity.md
+
+Verification floor / system eval
+  -> 14-evaluation-and-conformance.md
+```
+
+## 5. Runtime Adapter
+
+초기:
 
 ```text
 RuntimeAdapter
   -> OpenCodeAdapter
 ```
 
-향후 backend가 추가되더라도 orchestration core가 backend-specific CLI 문법을 알지 않도록 한다.
+core가 OpenCode CLI 세부 옵션을 알지 않게 한다.
 
-예시 interface:
+개념 contract:
 
 ```text
-run(request) -> run_result
-cancel(run_id)
-health() -> status
+run(request) -> runtime_result
+cancel(attempt_id)
+health() -> capability/status
 ```
 
-`run(request)`에는 최소한 다음이 포함된다.
+`run`에는 최소:
 
-- cwd
-- resolved agent profile
-- prompt/task contract
-- runtime timeout
-- output/log paths
-- environment allowlist
+- cwd/workspace id
+- resolved harness
+- frozen task reference
+- environment profile
+- timeout/output budget
+- capability report
 
-### 2.4 Registry 계층
+를 전달한다.
 
-Registry는 문자열 이름을 실제 실행 계약으로 resolve한다.
+Process-tree containment과 capability level은 `12` 문서를 따른다.
+
+## 6. Registry / Harness
 
 ```text
 AgentRegistry
+RoleRegistry
 SkillRegistry
 ProjectRegistry
-DomainRegistry (optional initial / explicit later)
 HarnessRegistry
+DomainRegistry(optional)
 ```
 
-Registry의 목적은 Agent 정의를 코드에 하드코딩하지 않는 것이다.
-
-### 2.5 Harness Compiler
-
-여러 profile을 최종 실행환경으로 합성한다.
+Agent는 고정 prompt가 아니라 composition 결과다.
 
 ```text
-Base
- + Role
- + Project
- + Domain
- + Explicit Skills
- + Task Contract
-        |
-        v
-Resolved Harness
+Base + Role + Project + Domain + Skills + Frozen TaskSpec
+  -> Resolved Harness IR
+  -> Runtime Adapter
 ```
 
-merge precedence와 conflict rule은 [03-agent-composition-and-harness.md](03-agent-composition-and-harness.md)에서 정의한다.
+Permission requirement와 grant는 별도로 resolve한다.
 
-### 2.6 Workspace Manager
+## 7. Workspace Manager
 
-- canonical repository clone/cache 관리
-- fetch/update
-- task branch/worktree 생성
-- cwd 결정
-- baseline snapshot
-- diff 수집
-- 허용 범위 밖 변경 탐지
+- canonical repo/cache
+- exact base commit resolve
+- branch/worktree
+- writer lease
+- baseline/diff
+- allowed/denied/policy-sensitive paths
 - cleanup
 
-### 2.7 Verification subsystem
+Git worktree는 source isolation이며 OS sandbox가 아니다.
 
-LLM review와 deterministic check를 분리한다.
+## 8. State / Artifact
 
 ```text
-LLM Reviewer
-  -> correctness / design / risk review
-
-Verifier
-  -> acceptance criteria evidence aggregation
-
-Deterministic Checks
-  -> build / test / lint / typecheck / git diff / path policy
+Task
+  -> Step
+      -> RunAttempt
 ```
 
-## 3. Control Plane과 Data Plane
+SQLite를 초기 canonical state store로 사용할 수 있다.
+
+Controller Artifact Store에는 Controller가 수집/생성한 request/input/check/result를 기록한다.
+
+단, Worker가 같은 OS identity로 전체 host filesystem에 접근할 수 있는 환경에서는 저장 위치만으로 tamper-proof라고 주장하지 않는다. 실제 storage integrity level은 Runtime Isolation capability와 함께 기록한다.
+
+## 9. Verification
+
+세 층을 결합한다.
+
+```text
+Output/schema validation
+Deterministic CheckRunner
+Semantic Reviewer/Verifier
+```
+
+CheckRunner가 실행한 command의 exit/result는 Controller-observed evidence다.
+
+하지만 project command/test 자체가 임의 코드를 실행할 수 있으므로 **evidence authority와 execution safety는 다른 문제**다. CheckRunner도 Runtime Isolation policy를 적용받는다.
+
+## 10. Control Plane / Execution Plane
 
 ### Control Plane
 
-```text
-Orchestrator request
-Registry
-Scheduler
-State Machine
-Policy Gate
-Harness Compiler
-Workspace Manager
-```
+- TaskSpec/amendment
+- registry/harness
+- scheduler/state/lease
+- policy/verification plan
+- artifact/event metadata
 
-### Data/Execution Plane
+### Execution Plane
 
-```text
-OpenCode processes
-Git worktrees
-Project source
-Prompt/context artifacts
-stdout/stderr
-outputs/diffs/check results
-```
+- OpenCode/backend process
+- child process
+- Git worktree
+- project build/test process
+- staged context/generated runtime files
 
-Herdr는 Control Plane 자체가 아니라 **관측 surface**다.
+Execution Plane의 결과가 Control Plane authority를 직접 바꾸지 않는다.
 
-## 4. 내부 데이터 흐름
+## 11. 데이터 흐름
 
 ```text
 1. User request
-2. Task Contract 생성/정규화
-3. Orchestrator가 delegate 요청 생성
-4. Controller가 request schema 검증
-5. AgentRegistry resolve
-6. Project가 있으면 workspace resolve/create
-7. Harness Compiler가 실행 profile 생성
-8. Policy Gate preflight
-9. OpenCodeAdapter.run(cwd=worktree)
-10. stdout/stderr/result 수집
-11. post-run path/diff policy 검사
-12. output contract 검사
-13. 필요 시 review/verify step
-14. deterministic checks
-15. state transition
-16. Orchestrator에 structured result 반환
-17. stop condition 충족 시 complete
+2. TaskSpec normalize/freeze + exact base SHA
+3. Orchestrator delegate proposal
+4. Controller Step/Attempt validation
+5. Agent/Project/Harness resolve
+6. workspace + lease
+7. capability/policy preflight
+8. Runtime Adapter execution
+9. Controller output/diff collection
+10. change classification
+11. VerificationPlan required checks
+12. CheckRunner / Reviewer / Verifier
+13. artifact/event/state commit
+14. completion gate
+15. next Step or DONE
 ```
 
-## 5. 권장 저장 구조
-
-초기 구현은 다음 정도면 충분하다.
+## 12. 초기 저장 구조
 
 ```text
-agent-forge/
+agent-forge/                  # source
 ├─ src/
-│  ├─ controller/
-│  ├─ orchestration/
-│  ├─ runtime/
-│  ├─ registry/
-│  ├─ harness/
-│  ├─ workspace/
-│  ├─ policy/
-│  └─ verification/
-│
 ├─ agents/
 ├─ roles/
 ├─ projects/
@@ -247,38 +245,42 @@ agent-forge/
 ├─ skills/
 ├─ harnesses/
 ├─ config/
-└─ .agent-forge/
-   ├─ tasks/
-   ├─ runs/
-   ├─ events/
-   ├─ results/
-   └─ logs/
+└─ evals/
+
+~/.agent-forge/               # local runtime
+├─ repos/
+├─ worktrees/
+├─ state/
+├─ tasks/
+└─ runs/
 ```
 
-runtime data는 repository source와 구분한다. 프로젝트 source에는 Agent Forge 전용 상태를 최소한만 남긴다.
+runtime state/artifact를 product source repo에 canonical data로 저장하지 않는다.
 
-## 6. 기술 선택 가이드
+## 13. 기술 선택
 
-MVP에서 필요한 것은 복잡한 인프라가 아니다.
+MVP:
 
-- implementation language: Python 또는 현재 운영 편의가 높은 단일 언어
-- process: local subprocess
-- config: YAML
-- contracts/events: JSON
-- state: 처음에는 JSON 또는 SQLite
-- repository isolation: Git worktree
-- agent backend: OpenCode
-- operator UI: Herdr optional
+- local single Controller
+- Python 또는 운영 편의 높은 단일 언어
+- YAML config
+- JSON artifacts
+- SQLite state
+- Git worktree
+- OpenCode backend
+- Herdr optional
 
-SQLite는 task 수, restart recovery, event query가 필요해지는 시점부터 권장한다. Redis/message broker는 멀티프로세스/멀티머신 요구가 생기기 전에는 추가하지 않는다.
+실제 병목 전에는 Redis, distributed queue, workflow DSL을 추가하지 않는다.
 
-## 7. 아키텍처 불변조건
+## 14. 아키텍처 불변조건
 
-1. Orchestrator가 OS process를 직접 관리하지 않는다.
-2. Agent가 다른 Agent pane을 직접 조작하는 것이 필수 프로토콜이 아니다.
-3. Project code 변경은 승인된 workspace root 안에서만 일어난다.
-4. Reviewer의 입력은 구현 Agent의 private reasoning에 의존하지 않는다.
-5. Runtime backend failure와 task logic failure를 구분한다.
-6. Prompt permission은 hard permission으로 간주하지 않는다.
-7. 완료 상태는 verification evidence 없이 선언하지 않는다.
-8. Agent Forge core는 OpenCode CLI 세부 옵션에 직접 결합되지 않는다.
+1. Orchestrator가 executable state authority를 소유하지 않는다.
+2. Frozen TaskSpec을 worker 자연어가 수정하지 않는다.
+3. Worker output이 canonical state/evidence를 직접 기록하지 않는다.
+4. Project workspace와 Controller state/artifact store를 분리한다.
+5. capability claim은 actual enforcement level을 따른다.
+6. CheckRunner 실행도 untrusted code execution 가능성을 고려한다.
+7. Runtime/backend failure와 task/check failure를 구분한다.
+8. DONE은 Controller verification gate를 통과해야 한다.
+9. UI는 canonical protocol이 아니다.
+10. OpenCode 세부사항은 adapter 뒤에 둔다.

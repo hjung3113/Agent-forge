@@ -1,147 +1,117 @@
 # Agent Forge Documentation Guide
 
-이 문서는 Agent Forge 문서의 **인덱스이자 읽기 가이드**다. 문서마다 책임을 분리해 같은 사실을 여러 문서에서 중복 정의하지 않는 것을 원칙으로 한다.
+이 문서는 Agent Forge 문서의 **인덱스이자 읽기 가이드**다. 같은 사실을 여러 문서에서 중복 정의하지 않고 각 문서의 canonical responsibility를 고정한다.
 
 ## 문서 역할
 
-| 문서 | 역할 | 이 문서가 답하는 질문 |
+| 문서 | 역할 | 핵심 질문 |
 |---|---|---|
-| [01-project-overview.md](design/01-project-overview.md) | 제품 목적과 범위 | 왜 만드는가, 무엇을 대체하며 무엇은 대체하지 않는가? |
-| [02-system-architecture.md](design/02-system-architecture.md) | 상위 아키텍처와 모듈 경계 | 전체 시스템은 어떤 컴포넌트로 나뉘는가? |
-| [03-agent-composition-and-harness.md](design/03-agent-composition-and-harness.md) | Agent/Harness 합성 모델 | 역할·프로젝트·도메인·스킬을 어떻게 조합하는가? |
-| [04-orchestration-runtime.md](design/04-orchestration-runtime.md) | 총괄 Agent, Controller, task lifecycle | 누가 판단하고 누가 실행·통제하는가? |
-| [05-project-workspace-and-context.md](design/05-project-workspace-and-context.md) | 프로젝트 등록, clone/worktree, context | 특정 프로그램 Agent를 해당 프로젝트에서 어떻게 실행하는가? |
-| [06-safety-verification-and-observability.md](design/06-safety-verification-and-observability.md) | 권한, 검증, 로그, Herdr | 안전성과 완료 신뢰성을 어떻게 확보하는가? |
-| [07-agent-registry-and-extension.md](design/07-agent-registry-and-extension.md) | Agent/Skill 추가·수정·삭제 | 런타임에서 Agent를 어떻게 확장하는가? |
-| [08-role-contracts-and-agent-environment.md](design/08-role-contracts-and-agent-environment.md) | Role별 책임·입출력·권한·context 계약 | Architect/Implementer/Reviewer 등은 정확히 무엇을 하고 무엇을 하면 안 되는가? |
-| [09-architecture-governance-and-fitness.md](design/09-architecture-governance-and-fitness.md) | 실행 가능한 아키텍처 규칙 | C#/Python dependency/layer 규칙을 어떻게 실제 check로 강제하는가? |
-| [10-skill-intake-portability-and-evaluation.md](design/10-skill-intake-portability-and-evaluation.md) | 외부 Skill intake, provenance, multi-harness 변환 | 외부 Skill을 어떻게 안전하게 이식하고 OpenCode 등 runtime에 맞게 변환하는가? |
-| [forgeroom-reuse-analysis.md](reference/forgeroom-reuse-analysis.md) | ForgeRoom 비교 및 재사용 판단 | 기존 ForgeRoom에서 무엇을 가져오고 무엇을 버리는가? |
-| [architecture-review.md](review/architecture-review.md) | 초기 5개 관점 적대적 설계 리뷰 | 현재 설계의 현실적 실패 지점과 보강 결정은 무엇인가? |
-| [architecture-agent-environment-review.md](review/architecture-agent-environment-review.md) | 아키텍처 + Agent 환경 재검토 | 외부 Agent/Skill 패턴까지 비교했을 때 무엇을 추가하고 무엇을 거부하는가? |
-| [mvp-roadmap.md](roadmap/mvp-roadmap.md) | 구현 순서와 단계별 완료 조건 | 어떤 순서로 구현해야 과설계를 피할 수 있는가? |
+| [01-project-overview.md](design/01-project-overview.md) | 제품 목적/범위 | 왜 만드는가? |
+| [02-system-architecture.md](design/02-system-architecture.md) | 상위 컴포넌트 경계 | 어떤 모듈로 나뉘는가? |
+| [03-agent-composition-and-harness.md](design/03-agent-composition-and-harness.md) | Agent/Harness 합성 | Role/Project/Domain/Skill을 어떻게 합치는가? |
+| [04-orchestration-runtime.md](design/04-orchestration-runtime.md) | Orchestrator/Controller/실행 흐름 | 누가 판단하고 누가 상태를 통제하는가? |
+| [05-project-workspace-and-context.md](design/05-project-workspace-and-context.md) | Project/worktree/context | 어떤 repository에서 어떤 context로 실행하는가? |
+| [06-safety-verification-and-observability.md](design/06-safety-verification-and-observability.md) | Policy/verification/observability | 완료와 안전성을 어떻게 확인하는가? |
+| [07-agent-registry-and-extension.md](design/07-agent-registry-and-extension.md) | Registry lifecycle | Agent/Skill/Profile을 어떻게 확장하는가? |
+| [08-role-contracts-and-agent-environment.md](design/08-role-contracts-and-agent-environment.md) | Role 책임/환경 | 각 Role의 authority와 capability requirement는 무엇인가? |
+| [09-architecture-governance-and-fitness.md](design/09-architecture-governance-and-fitness.md) | Architecture Fitness | 구조 규칙을 어떻게 deterministic check로 내리는가? |
+| [10-skill-intake-portability-and-evaluation.md](design/10-skill-intake-portability-and-evaluation.md) | Skill 공급망/portability | 외부 Skill을 어떻게 audit/pin/변환하는가? |
+| [11-task-contract-and-change-control.md](design/11-task-contract-and-change-control.md) | TaskSpec/change control | 목표/scope/AC가 어떻게 freeze/변경되는가? |
+| [12-runtime-isolation-and-trust-boundaries.md](design/12-runtime-isolation-and-trust-boundaries.md) | Threat/isolation/capability | 무엇을 실제 강제하고 무엇은 탐지만 가능한가? |
+| [13-state-recovery-and-artifact-integrity.md](design/13-state-recovery-and-artifact-integrity.md) | State/recovery/evidence | retry/crash/evidence의 canonical model은 무엇인가? |
+| [14-evaluation-and-conformance.md](design/14-evaluation-and-conformance.md) | System eval/conformance | Agent Forge 자체의 불변조건을 어떻게 검증하는가? |
+| [forgeroom-reuse-analysis.md](reference/forgeroom-reuse-analysis.md) | ForgeRoom 재사용 분석 | 무엇을 가져오고 버리는가? |
+| [architecture-review.md](review/architecture-review.md) | 1차 적대적 리뷰 | 초기 현실성/경계 위험은 무엇이었나? |
+| [architecture-agent-environment-review.md](review/architecture-agent-environment-review.md) | 역할/Agent 환경 리뷰 | Role/Fitness/Skill 공급망을 어떻게 보강했나? |
+| [architecture-adversarial-review-round2.md](review/architecture-adversarial-review-round2.md) | 신뢰경계 재리뷰 | TaskSpec/state/isolation/evidence의 남은 위험은 무엇인가? |
+| [mvp-roadmap.md](roadmap/mvp-roadmap.md) | 구현 순서 | 어떤 foundation부터 구현하는가? |
 
 ## Canonical Responsibility
 
-중복 정의를 막기 위해 다음 책임을 고정한다.
-
 ```text
-System boundary / component ownership
-  -> 02 System Architecture
-
-Profile composition / merge precedence
-  -> 03 Agent Composition & Harness
-
-Task/run state / delegation / retry
-  -> 04 Orchestration & Runtime
-
+System boundary / Controller TCB
+  -> 02
+Profile composition / merge semantics
+  -> 03
+Orchestration flow
+  -> 04
 Repository/worktree/context
-  -> 05 Project Workspace & Context
-
-Security/completion/observability
-  -> 06 Safety, Verification & Observability
-
+  -> 05
+General safety/completion/observability
+  -> 06
 Registry lifecycle
-  -> 07 Agent Registry & Extension
-
-Role semantics / Agent environment
-  -> 08 Role Contracts & Agent Environment
-
-Architecture rule / fitness / baseline
-  -> 09 Architecture Governance & Fitness
-
-External Skill trust / portability / evaluation
-  -> 10 Skill Intake, Portability & Evaluation
+  -> 07
+Role semantics / requirement
+  -> 08
+Architecture Fitness
+  -> 09
+External Skill trust/portability
+  -> 10
+TaskSpec lifecycle/amendment/base pinning
+  -> 11
+Threat model/runtime isolation/enforcement
+  -> 12
+Task-Step-Attempt/recovery/artifact provenance
+  -> 13
+Verification floor/adversarial eval/conformance
+  -> 14
 ```
 
-다른 문서에서는 해당 사실을 재정의하지 않고 링크로 참조한다.
+세부 내용이 이전 문서의 예시와 충돌하면 해당 책임의 canonical 문서를 따른다.
 
 ## 권장 읽기 순서
 
-### 처음 설계를 이해할 때
+### 설계 전체
 
 ```text
-01 Project Overview
-  -> 02 System Architecture
-  -> 03 Agent Composition & Harness
-  -> 04 Orchestration & Runtime
-  -> 05 Project Workspace & Context
-  -> 06 Safety / Verification / Observability
-  -> 08 Role Contracts & Agent Environment
-  -> 09 Architecture Governance & Fitness
-  -> 07 Agent Registry & Extension
-  -> 10 Skill Intake / Portability / Evaluation
-  -> Architecture & Agent Environment Review
+01 -> 02 -> 11 -> 12 -> 13
+   -> 03 -> 04 -> 05 -> 06
+   -> 08 -> 09 -> 07 -> 10 -> 14
+   -> latest adversarial review
 ```
 
-### 구현을 시작할 때
+### 구현 시작
 
 ```text
-02 System Architecture
-  -> 04 Orchestration & Runtime
-  -> 08 Role Contracts & Agent Environment
-  -> 03 Agent Composition & Harness
-  -> 05 Project Workspace & Context
-  -> 06 Safety / Verification / Observability
-  -> 09 Architecture Governance & Fitness
-  -> 07 Agent Registry & Extension
-  -> 10 Skill Intake / Portability / Evaluation
-  -> MVP Roadmap
+11 -> 13 -> 12 -> 02 -> 04 -> 05 -> 03 -> 06 -> 14 -> Roadmap
 ```
 
-### 외부 Agent/Skill을 참고하거나 이식할 때
+## Source-of-truth priority
 
 ```text
-10 Skill Intake / Portability / Evaluation
-  -> 08 Role Contracts & Agent Environment
-  -> 03 Agent Composition & Harness
-  -> 06 Safety / Verification / Observability
+Accepted ADR
+  -> current decision record
+Current Design Specification
+  -> canonical current specification
+Implementation
+  -> implementation of spec
+Review / Reference
+  -> findings/evidence/reference
 ```
 
-### ForgeRoom 자산을 옮길 때
+Accepted ADR이 기존 결정을 supersede하면 design specification도 같은 변경에서 갱신한다.
 
-```text
-ForgeRoom Reuse Analysis
-  -> 대상 Agent Forge 설계 문서
-  -> 기존 ForgeRoom 구현/ADR
-```
-
-## 문서 우선순위
-
-충돌 시 다음 순서를 따른다.
-
-1. 현재 Agent Forge 설계 문서
-2. 향후 Agent Forge ADR
-3. Agent Forge 구현
-4. Agent Forge review/reference 문서
-5. 외부 프로젝트 참고 자료
-6. ForgeRoom 참고 문서
-
-외부 Agent/Skill 프로젝트와 ForgeRoom은 **참고 구현/설계 자산**이지 Agent Forge의 canonical specification이 아니다.
+ADR에는 가능하면 `status`, `supersedes`, `superseded_by`를 둔다.
 
 ## 문서 변경 규칙
 
-- 모듈 책임이나 public contract가 바뀌면 관련 설계 문서를 함께 수정한다.
-- 같은 사실을 여러 문서에 복사하지 않는다. 다른 문서에서는 링크로 참조한다.
-- 구현 세부사항보다 **경계, 불변조건, 데이터 흐름, 실패 처리**를 우선 기록한다.
-- 실험적 아이디어와 확정 설계를 섞지 않는다. 확정 전 아이디어는 roadmap 또는 향후 ADR에 둔다.
-- `OpenCode`, `Herdr`, Git provider, architecture test tool 등 외부 도구의 세부 동작은 adapter/check command 뒤에 숨기고 문서에는 Agent Forge가 의존하는 최소 계약만 적는다.
-- 새 Role을 만들기 전에 Skill/Domain으로 표현할 수 없는 authority 차이가 있는지 확인한다.
-- 새 architecture rule은 가능하면 deterministic check로 내릴 수 있는지 검토한다.
-- 외부 Skill은 승인 전까지 untrusted로 취급한다.
+- authority/state/trust boundary/public contract 변경은 design 문서와 같이 반영한다.
+- 같은 사실을 여러 문서에서 재정의하지 않는다.
+- security claim은 threat model과 `ENFORCED / DETECTABLE / ADVISORY`를 구분한다.
+- `Controller-owned`와 `physically tamper-proof`를 동의어로 쓰지 않는다.
+- CheckRunner도 project code를 실행할 수 있으므로 execution plane으로 본다.
+- 외부 Skill은 승인 전 untrusted다.
+- 반복 finding은 deterministic check/eval로 승격 가능한지 검토한다.
 
 ## 핵심 용어
 
-- **Orchestrator Agent**: 사용자 목표를 해석하고 필요한 Agent 호출을 제안하는 총괄 LLM Agent.
-- **Controller**: spawn, 상태 전이, 권한, retry, concurrency, workspace, 결과를 결정적으로 통제하는 프로그램.
-- **Agent Profile**: Role/Project/Domain/Skill 조합을 가리키는 논리적 Agent 정의.
-- **Role Contract**: Role의 책임, 입력/출력, write boundary, 금지 행위를 정의하는 계약.
-- **Agent Environment Contract**: filesystem/shell/network/git/delegation/context/output capability를 명시한 실행 계약.
-- **Harness Profile**: Agent가 실행될 때 적용되는 지침, skills, tools, permissions, output contract 묶음.
-- **Project Profile**: repository, build/test 명령, project context, 허용 경로, architecture checks 등을 정의하는 프로젝트 설정.
-- **Architecture Fitness Check**: dependency/layer/invariant를 실제 command/test로 검증하는 deterministic check.
-- **Task Contract**: objective, scope, exclusions, acceptance criteria, verification evidence, stop condition을 포함한 실행 계약.
-- **Workspace**: task별 격리된 Git worktree.
-- **Runtime Backend**: 실제 LLM coding agent를 실행하는 backend. 초기 구현은 OpenCode.
-- **Canonical Skill**: Agent Forge 내부 source of truth로 승인·고정된 Skill package.
-- **Generated Harness Artifact**: canonical 정의를 target runtime 문법으로 변환한 비-canonical 산출물.
+- **TaskSpec**: frozen objective/scope/AC/base revision specification.
+- **TaskAmendment**: frozen TaskSpec 변경 기록.
+- **VerificationPlan**: Controller가 계산한 최소 검증 계획.
+- **Step**: 논리 작업 단위.
+- **RunAttempt**: Step의 runtime 실행 1회.
+- **Controller Artifact Store**: Controller가 canonical evidence namespace로 관리하는 저장 영역. 실제 tamper resistance는 isolation level에 따름.
+- **Capability Enforcement Level**: ENFORCED / DETECTABLE / ADVISORY.
+- **Workspace Lease**: writer concurrency 제어.
+- **Runner Trust Class**: controller_builtin / external_tool / project_command.
+- **Runtime Backend**: coding agent backend. 초기 OpenCode.

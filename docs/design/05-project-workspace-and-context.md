@@ -2,13 +2,15 @@
 
 ## 1. 목적
 
-특정 프로그램 Agent는 단순히 프로젝트 설명을 prompt로 받는 것이 아니라 **실제 target repository의 격리 workspace에서 실행**되어야 한다.
+특정 Project Agent는 target repository의 격리 workspace에서 실행되어야 한다.
 
-Agent Forge는 이를 위해 Project Registry + canonical repository cache + task worktree를 사용한다.
+Git worktree는 source 변경을 분리하는 수단이며, trusted runtime state/evidence store가 아니다.
+
+Runtime trust boundary는 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md), artifact/store 규칙은 [13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md)를 따른다.
 
 ## 2. Project Profile
 
-예시:
+예:
 
 ```yaml
 id: logwarehouse
@@ -21,237 +23,200 @@ context:
   include:
     - AGENTS.md
     - docs/architecture/**
-    - docs/domain/**
 commands:
-  build: dotnet build
-  test: dotnet test
-  lint: null
+  build: dotnet build LogWarehouse.sln
+  test: dotnet test LogWarehouse.sln --no-build
 permissions:
   deny_paths:
     - .env
     - secrets/**
+policy_sensitive_paths:
+  - .github/**
+  - .agent-forge/architecture-baseline.json
+  - tests/ArchitectureTests/**
 ```
 
-Project Profile은 **프로젝트 실행 메타데이터**를 소유한다.
+Project Profile은 repository/context/registered commands/project policy를 소유하고 Role/Skill/runtime provider identity와 분리한다.
 
-다음은 Project Profile과 분리한다.
-
-- role behavior
-- generic coding skill
-- runtime provider identity
-- task-specific objective
-
-## 3. Repository Layout
-
-권장 local layout:
+## 3. Local layout
 
 ```text
 ~/.agent-forge/
 ├─ repos/
-│  ├─ logwarehouse.git/       # canonical clone/cache
+│  ├─ logwarehouse.git/
 │  └─ analyzer.git/
-│
 ├─ worktrees/
 │  ├─ T-001-logwarehouse/
-│  ├─ T-002-logwarehouse/
-│  └─ T-003-analyzer/
-│
+│  └─ T-002-logwarehouse/
+├─ state/
+│  └─ agent-forge.db
 ├─ tasks/
-├─ runs/
-└─ logs/
+└─ runs/
 ```
 
-매 task마다 remote에서 새로 clone하는 대신 canonical clone/cache를 유지하고 fetch 후 worktree를 만든다.
+`tasks/`, `runs/`, `state/`는 Controller-owned 영역이다.
 
 ## 4. Workspace lifecycle
 
 ```text
 Project resolve
-  -> canonical repo 존재 확인
-      -> 없으면 clone
-      -> 있으면 fetch
-  -> base ref 확인
-  -> branch 생성
-  -> git worktree add
-  -> Agent Forge runtime context stage
-  -> baseline snapshot
-  -> Agent 실행
-  -> diff/check/result 수집
-  -> keep/remove/archive policy
+ -> canonical repo/cache 확인 + fetch
+ -> TaskSpec.base_revision exact SHA 확인
+ -> task branch/worktree 생성
+ -> workspace lease 획득
+ -> runtime input staging
+ -> baseline snapshot
+ -> Agent 실행
+ -> diff/untracked/policy 검사
+ -> CheckRunner
+ -> artifact store 수집
+ -> lease release
+ -> keep/remove/archive policy
 ```
 
-### branch naming
+remote default branch가 task 도중 이동해도 현재 Task는 pinned base SHA를 유지한다.
+
+## 5. Branch/worktree naming
 
 예:
 
 ```text
-agent-forge/<task-short-id>-<slug>
+branch: agent-forge/T-001-carryover-fix
+worktree: ~/.agent-forge/worktrees/T-001-logwarehouse
 ```
 
-branch와 worktree path는 Controller가 생성하고 Agent가 임의로 결정하지 않는다.
+Controller가 생성한다.
 
-## 5. Project Agent 실행
+Agent가 임의로 baseline branch/worktree를 바꾸지 않는다.
 
-예:
+## 6. 여러 Agent의 workspace
 
-```text
-logwarehouse-expert
-```
-
-이 Agent를 실행할 때 Controller는 다음을 자동으로 resolve한다.
-
-```text
-Agent Profile
-  role: project-expert
-  project: logwarehouse
-
-Controller
-  -> ProjectRegistry(logwarehouse)
-  -> workspace for current task
-  -> cwd = worktree
-  -> project context stage
-  -> harness compile
-  -> OpenCode run
-```
-
-따라서 Project Expert는 항상 해당 project source를 직접 읽을 수 있고, 임의의 다른 프로젝트 directory에서 실행되지 않는다.
-
-## 6. 여러 Agent의 workspace 전략
-
-모든 Agent가 반드시 별도 worktree를 가져야 하는 것은 아니다.
-
-### 같은 task에서 turn-taking
+### Sequential
 
 ```text
 Implementer -> Reviewer -> Fix -> Verifier
 ```
 
-동시에 쓰지 않는다면 같은 task worktree를 공유할 수 있다. Reviewer는 read-only policy로 실행한다.
+동시 writer가 아니라면 동일 task worktree를 turn-taking으로 공유할 수 있다.
 
-### 병렬 구현
+### Parallel writers
+
+각 writer에 별도 worktree가 필요하다.
 
 ```text
-Worker A  -> worktree A
-Worker B  -> worktree B
+Worker A -> worktree A
+Worker B -> worktree B
 ```
 
-동시에 source를 수정한다면 worktree를 분리한다.
+MVP에서는 자동 merge/reconcile을 기본 기능으로 만들지 않는다.
 
-### Domain Expert
+### Workspace lease
 
-project source를 읽을 필요가 없다면 workspace 없이 domain context만 사용할 수 있다. 프로젝트와 함께 분석해야 한다면 read-only project worktree 또는 동일 task worktree를 사용할 수 있다.
+같은 worktree에 동시에 하나의 writer만 허용한다.
 
-핵심 원칙은 **동시에 쓰는 두 Agent가 동일 working tree를 공유하지 않는 것**이다.
+Reviewer read-only 병행은 실제 filesystem enforcement가 가능한 경우에만 고려한다. 그렇지 않으면 순차 실행이 기본이다.
 
-## 7. Runtime Context Directory
+## 7. Runtime staging vs trusted artifact
 
-Project source와 Agent Forge artifact를 구분한다.
+Project-local staging이 필요한 runtime도 있다.
 
 예:
 
 ```text
-<worktree>/.agent-forge/
+<worktree>/.agent-forge-runtime/
 ├─ context/
-│  ├─ task.md
-│  ├─ project.md
-│  ├─ domain/
-│  ├─ selected-docs/
-│  └─ summary.md
-├─ runtime/
-│  └─ <run-id>/
-│     ├─ resolved-agent.yaml
-│     ├─ resolved-harness.yaml
-│     └─ policy.json
-├─ prompts/
-├─ outputs/
-├─ diffs/
-└─ logs/
+├─ generated/
+└─ prompt-entry/
 ```
 
-이 디렉터리는 실제 제품 source와 분리된 Agent Forge 실행 artifact다.
+이 영역은 Worker가 접근할 수 있으므로 **canonical state/evidence가 아니다.**
 
-## 8. Context Source 계층
+Controller는 실행 전 staging input의 hash를 trusted store에 기록한다.
 
-Project Agent에게 모든 파일을 처음부터 넣지 않는다.
+실행 결과의 canonical artifact는:
 
 ```text
-Tier 1 - Always
-  Task Contract
-  root AGENTS.md
-  project profile
+~/.agent-forge/runs/<run-id>/
+```
 
-Tier 2 - Selected
+에 저장한다.
+
+project repository 자체의 `.agent-forge/`가 architecture baseline 같은 source-controlled project config를 소유할 수 있지만, 그 변경은 policy-sensitive source change로 취급한다.
+
+## 8. Context tier
+
+```text
+Tier 1 Always
+  Frozen TaskSpec
+  approved root/project instruction
+  Project Profile summary
+
+Tier 2 Selected
   relevant architecture/module docs
-  relevant source files
-  relevant tests
+  relevant source/tests
 
-Tier 3 - On demand
-  large logs
-  historical artifacts
-  unrelated modules
+Tier 3 On demand
+  large logs/history/unrelated modules
 ```
 
-Project Profile은 context를 직접 prompt에 모두 삽입하기보다 **어디에서 찾을지와 canonical source가 무엇인지** 정의하는 것이 좋다.
+모든 파일을 prompt에 넣지 않는다.
 
-## 9. Context provenance
+## 9. Context trust/provenance
 
-Agent가 어떤 근거를 사용했는지 추적할 수 있어야 한다.
+Context source마다 다음을 기록한다.
 
-`resolved-context.json` 예:
-
-```json
-{
-  "project": "logwarehouse",
-  "task": "T-001",
-  "sources": [
-    {"path": "AGENTS.md", "reason": "project root rule"},
-    {"path": "docs/architecture/parser.md", "reason": "selected by project expert"},
-    {"path": "src/Parser/Carryover.cs", "reason": "task scope"}
-  ]
-}
+```text
+path/source
+content hash
+selection reason
+trust class
 ```
 
-이는 stale/irrelevant context 문제를 디버깅할 때 중요하다.
+Trust class 예:
 
-## 10. Dirty baseline 정책
+```text
+CONTROL
+TRUSTED_PROJECT_INSTRUCTION
+REFERENCE_CONTENT
+```
 
-기존 canonical project가 dirty한 working directory에 의존해서는 안 된다. canonical clone/cache는 가능한 한 clean 상태를 유지한다.
+Repository 안의 임의 문서/주석은 자동으로 control instruction이 되지 않는다.
 
-worktree 생성 전:
+## 10. Dirty baseline
 
-- target base ref 확인
-- uncommitted state와 무관한 canonical object DB 사용
-- 예상하지 못한 local patch가 task baseline에 섞이지 않게 함
+canonical repo/cache는 작업용 dirty tree에 의존하지 않는다.
 
-만약 사용자가 특정 local dirty state를 기준으로 작업해야 한다면 일반 Project Profile이 아니라 명시적 snapshot/import 기능으로 다뤄야 한다.
+사용자가 특정 local dirty state를 기준으로 작업해야 한다면 explicit snapshot/import 기능으로 별도 취급한다.
 
-## 11. Post-run 검증
+TaskSpec freeze 시 exact base revision을 기록한다.
 
-Agent 실행 전 baseline snapshot을 잡고 실행 후 다음을 계산한다.
+## 11. Post-run validation
 
-- changed files
+최소:
+
+- changed tracked files
 - untracked files
 - git diff
-- forbidden path changes
-- source scope 밖 변경
+- task scope
+- denied paths
+- policy-sensitive paths
+- unexpected submodule/worktree state
 
-허용 범위를 벗어난 변경을 자동 revert할지 task를 fail할지는 policy로 결정한다. 보안 민감 경로는 fail-closed가 기본이다.
+을 검사한다.
 
-## 12. Build/Test 명령
+Symlink/path canonicalization과 workspace 밖 side effect 문제는 Git diff만으로 해결되지 않으므로 Runtime Isolation 정책과 함께 본다.
 
-Project Profile의 명령은 Agent가 임의 생성하는 shell command보다 높은 신뢰도를 가진다.
+## 12. Build/Test command
 
-```yaml
-commands:
-  build: dotnet build LogWarehouse.sln
-  test: dotnet test LogWarehouse.sln --no-build
-```
+Project Profile에 등록된 command가 기본 authority다.
 
-Verifier/CheckRunner는 가능한 한 등록된 명령을 사용한다. 임의 shell 명령이 필요하면 PolicyGate를 통과해야 한다.
+CheckRunner는 registered command id와 실제 command/args를 artifact에 기록한다.
 
-## 13. 프로젝트 추가
+Worker가 test script/config 자체를 변경한 경우 검증 약화 가능성이 있으므로 change classification이 추가 review/control check를 요구할 수 있다.
 
-초기 CLI 예:
+## 13. Project add/validate
+
+예:
 
 ```text
 agent-forge project add <id> <repo-url>
@@ -260,13 +225,23 @@ agent-forge project list
 agent-forge project remove <id>
 ```
 
-`project add`는 repository를 등록하되 즉시 source를 수정하지 않는다. validation에서 clone/fetch 가능 여부, default branch, command, context path를 검사한다.
+validation에는 clone/fetch뿐 아니라:
+
+- default branch resolve
+- registered commands
+- context paths
+- denied/policy-sensitive paths
+- architecture check references
+
+를 포함한다.
 
 ## 14. 설계 불변조건
 
-1. Project Agent는 명시된 project workspace 밖에서 project write 작업을 하지 않는다.
-2. canonical repo/cache와 task worktree 역할을 분리한다.
-3. 병렬 writer는 동일 worktree를 공유하지 않는다.
-4. runtime artifact와 product source를 구분한다.
-5. context source의 provenance를 남긴다.
-6. Project Profile은 runtime provider에 종속되지 않는다.
+1. canonical repo/cache와 task worktree를 분리한다.
+2. source workspace와 trusted state/artifact store를 분리한다.
+3. task baseline은 exact commit SHA로 pin한다.
+4. 동시에 쓰는 Agent는 같은 worktree를 공유하지 않는다.
+5. worktree에는 writer lease를 둔다.
+6. project content의 context trust class를 구분한다.
+7. policy-sensitive verification/config 변경을 일반 source 변경으로 취급하지 않는다.
+8. Git diff를 OS sandbox와 동일시하지 않는다.
