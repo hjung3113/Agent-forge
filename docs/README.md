@@ -14,6 +14,7 @@
 | [06-safety-verification-and-observability.md](design/06-safety-verification-and-observability.md) | 권한, 검증, 로그, Herdr | 안전성과 완료 신뢰성을 어떻게 확보하는가? |
 | [07-agent-registry-and-extension.md](design/07-agent-registry-and-extension.md) | Agent/Skill 추가·수정·삭제 | 런타임에서 Agent를 어떻게 확장하는가? |
 | [forgeroom-reuse-analysis.md](reference/forgeroom-reuse-analysis.md) | ForgeRoom 비교 및 재사용 판단 | 기존 ForgeRoom에서 무엇을 가져오고 무엇을 버리는가? |
+| [architecture-review.md](review/architecture-review.md) | 5개 관점 적대적 설계 리뷰 | 현재 설계의 현실적 실패 지점과 보강 결정은 무엇인가? |
 | [mvp-roadmap.md](roadmap/mvp-roadmap.md) | 구현 순서와 단계별 완료 조건 | 어떤 순서로 구현해야 과설계를 피할 수 있는가? |
 
 ## 권장 읽기 순서
@@ -28,6 +29,7 @@
   -> 05 Project Workspace & Context
   -> 06 Safety / Verification / Observability
   -> 07 Agent Registry & Extension
+  -> Architecture Review
 ```
 
 ### 구현을 시작할 때
@@ -38,6 +40,7 @@
   -> 03 Agent Composition & Harness
   -> 05 Project Workspace & Context
   -> 06 Safety / Verification / Observability
+  -> Architecture Review
   -> MVP Roadmap
 ```
 
