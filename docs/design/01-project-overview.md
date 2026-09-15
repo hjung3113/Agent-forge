@@ -102,7 +102,7 @@ Agent Runtime
  + Project Profile
  + Domain Profile
  + Skill Set
- + Task Contract
+ + Frozen TaskSpec
 ```
 
 ### P3. Project work is workspace-bound

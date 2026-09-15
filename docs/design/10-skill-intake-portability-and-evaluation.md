@@ -258,7 +258,7 @@ capabilities:
   shell: allowlisted
 output_contract: review-v1
 context:
-  - task_contract
+  - task_spec
   - final_diff
 ```
 
@@ -306,8 +306,10 @@ harnesses/
 generated artifact:
 
 ```text
-.agent-forge/generated/<runtime>/...
+<worktree>/.agent-forge-runtime/generated/<runtime>/...
 ```
+
+[05-project-workspace-and-context.md](05-project-workspace-and-context.md) §7의 staging 경로만 사용한다. target repo의 `.opencode/` 또는 `.agent-forge/generated/`에는 쓰지 않는다 — [03-agent-composition-and-harness.md](03-agent-composition-and-harness.md) §8의 overlay 금지 규칙이 adapter native 산출물에도 동일하게 적용된다. staging input의 hash와 canonical evidence는 [13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md) Controller Artifact Store에 기록한다.
 
 원칙:
 

@@ -261,8 +261,8 @@ agent-forge/                  # source
 ├─ repos/
 ├─ worktrees/
 ├─ state/
-├─ tasks/
-└─ runs/
+├─ tasks/                      # Attempt-keyed artifact store, 13 §11
+└─ projects/                   # per-project Learned Memory, 05 §9.1
 ```
 
 runtime state/artifact를 product source repo에 canonical data로 저장하지 않는다.

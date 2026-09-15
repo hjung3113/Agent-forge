@@ -57,15 +57,7 @@ Worker가 Controller와 동일 OS identity로 unrestricted host access를 가진
 
 ## 4. Capability level
 
-모든 security 관련 capability는:
-
-```text
-ENFORCED
-DETECTABLE
-ADVISORY
-```
-
-중 하나로 보고한다.
+모든 security 관련 capability는 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4의 canonical 4단계(`ENFORCED / DETECTABLE / ADVISORY / UNSUPPORTED`) 중 하나로 보고한다.
 
 Prompt의 `read-only`는 자동으로 ENFORCED가 아니다.
 
@@ -193,6 +185,8 @@ check.completed
 verification.failed
 task.completed
 ```
+
+`intake.started` / `intake.suggested`([13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md)의 IntakeSession)는 별도 이벤트 계열이며 `attempt.*`와 섞지 않는다. TaskSpec이 없는 활동이기 때문이다.
 
 Event에는 task/step/attempt id, actor, timestamp, reason, schema version을 포함한다.
 

@@ -190,7 +190,7 @@ cross-project user briefing(개인비서형 진입)은 Phase 6 완료 조건이 
 
 ## 12. Phase 7 — Skill Intake
 
-- validate/audit/stage/approve
+- validate/audit/stage/evaluate/approve ([10-skill-intake-portability-and-evaluation.md](../design/10-skill-intake-portability-and-evaluation.md) §6 Stage 5 — script/tool을 포함한 Skill은 evaluate(Behavioral/Runtime) 없이 approve하지 않는다)
 - revision/license/provenance
 - script/network/fs inspection
 - trigger/non-trigger

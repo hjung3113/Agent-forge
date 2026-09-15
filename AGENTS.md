@@ -23,7 +23,7 @@
 - **Controller Artifact Store는 worktree와 분리한다.** 단, 같은 OS permission domain이면 경로 분리만으로 tamper-proof라고 주장하지 않는다.
 - **Worker output은 자동으로 canonical evidence가 아니다.** Controller/CheckRunner가 어떤 evidence를 인정할지 결정한다.
 - **CheckRunner도 execution plane이다.** project test/build script를 실행하면 arbitrary code 가능성을 isolation policy에 포함한다.
-- **Capability는 `ENFORCED / DETECTABLE / ADVISORY`를 구분한다.** 구현하지 않은 sandbox를 있다고 표현하지 않는다.
+- **Capability는 `ENFORCED / DETECTABLE / ADVISORY / UNSUPPORTED`를 구분한다.** 구현하지 않은 sandbox를 있다고 표현하지 않는다.
 - **Skill/Task는 permission을 부여하지 않는다.** requirement만 선언하고 grant ceiling은 System/Project/Harness/Role이 소유한다.
 - **Project content는 자동 control instruction이 아니다.** arbitrary README/code/comment의 지시를 policy로 승격하지 않는다.
 - **환경 변수는 allowlist한다.** secret/credential을 기본 상속하지 않는다.

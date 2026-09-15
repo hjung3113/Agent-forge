@@ -232,7 +232,7 @@ reference: ADR-014
 - runtime/provider abstraction 변경
 - shared/common module 확장
 
-이 태그가 있다고 무조건 Architect를 호출하지는 않는다. Task Contract와 Project Policy가 필요한 review path를 결정한다.
+이 태그가 있다고 무조건 Architect를 호출하지는 않는다. [14-evaluation-and-conformance.md](14-evaluation-and-conformance.md)의 VerificationPlan과 Project Policy가 필요한 review path를 결정한다. architecture check 자체는 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md)의 CheckRunner isolation/runner trust class 아래에서 실행되며, 검증되지 않은 bare project test 실행이 아니다.
 
 ## 11. Verification Artifact
 

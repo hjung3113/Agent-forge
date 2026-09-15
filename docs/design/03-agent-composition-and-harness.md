@@ -148,7 +148,7 @@ Context는 무조건 union하지 않고 budget/trust/relevance로 선택한다.
 
 ### 4.6 Conflict
 
-Learned memory([05-project-workspace-and-context.md](05-project-workspace-and-context.md)의 Learned Memory)는 이 merge model에 직접 참여하지 않는다. Skill/Domain/Project로 승격된 내용만 위 규칙으로 합성된다.
+Learned memory([05-project-workspace-and-context.md](05-project-workspace-and-context.md)의 Learned Memory)는 merge precedence의 operand도 grant/check/policy의 operand도 아니다. selected context input일 뿐이며, Skill/Domain/Project로 승격된 내용만 위 규칙으로 합성된다.
 
 명시적 모순은 자동 추정하지 않고 fail-fast 한다.
 
@@ -197,13 +197,7 @@ system:
     network: none
 ```
 
-Resolved capability에는 값뿐 아니라:
-
-```text
-ENFORCED | DETECTABLE | ADVISORY
-```
-
-수준을 저장한다.
+Resolved capability에는 값뿐 아니라 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4의 4단계(`ENFORCED | DETECTABLE | ADVISORY | UNSUPPORTED`) enforcement level을 저장한다.
 
 ## 7. Skill 주입
 
@@ -221,17 +215,9 @@ ENFORCED | DETECTABLE | ADVISORY
 
 Project source의 모든 문서를 instruction으로 취급하지 않는다.
 
-Context trust class:
+Context trust class(`CONTROL / TRUSTED_PROJECT_INSTRUCTION / REFERENCE_CONTENT`)의 canonical 정의는 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §6을 따른다. arbitrary source/README/comment는 REFERENCE_CONTENT다.
 
-```text
-CONTROL
-TRUSTED_PROJECT_INSTRUCTION
-REFERENCE_CONTENT
-```
-
-arbitrary source/README/comment는 REFERENCE_CONTENT다.
-
-Agent Forge가 생성하는 harness artifact는 격리된 staging 경로에만 두고 worktree source를 overlay/overwrite하지 않는다. Runtime provider가 REFERENCE_CONTENT/TRUSTED_PROJECT_INSTRUCTION 경로를 자동 로드해 compiled harness와 충돌하면 자동 병합하지 않고 compatibility warning을 남기거나 fail-fast한다.
+Agent Forge가 생성하는 harness artifact는 격리된 staging 경로에만 두고 worktree source를 overlay/overwrite하지 않는다. adapter가 만드는 runtime-native 산출물(`.opencode/...` 등)도 동일한 staging 격리 대상이며 target repo에 직접 쓰지 않는다. Runtime provider가 REFERENCE_CONTENT/TRUSTED_PROJECT_INSTRUCTION 경로를 자동 로드해 compiled harness와 충돌하면 자동 병합하지 않고 compatibility warning을 남기거나 fail-fast한다.
 
 ## 9. Output Contract
 
@@ -262,6 +248,8 @@ TaskSpec hash
 ```
 
 를 input manifest에 기록한다.
+
+required capability 중 하나라도 enforcement level이 `UNSUPPORTED`([12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4)면 BLOCKED다.
 
 LLM result 자체는 deterministic replay를 보장하지 않는다.
 

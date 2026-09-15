@@ -61,7 +61,11 @@ T4가 `CheckRunner`에 의해 시작됐다고 해서 안전한 코드는 아니�
 
 prompt/runtime instruction 수준.
 
-강한 이름을 쓰더라도 enforcement level을 별도로 저장한다.
+### UNSUPPORTED
+
+backend가 capability 자체를 제공하지 않음. degrade가 아니라 부재다. 대체 수단(adapter 외부 구현, 기능 포기, 명시적 중단)을 별도로 결정해야 한다.
+
+강한 이름을 쓰더라도 enforcement level을 별도로 저장한다. canonical enforcement level은 이 네 단계(`ENFORCED / DETECTABLE / ADVISORY / UNSUPPORTED`)이며 다른 문서는 이 절을 참조한다.
 
 ## 5. Required vs Granted
 
@@ -79,7 +83,7 @@ effective_grant
 required <= effective_grant
 ```
 
-가 아니면 BLOCKED다.
+가 아니면 BLOCKED다. `required` capability의 enforcement level이 `UNSUPPORTED`인 경우도 동일하게 BLOCKED다.
 
 ## 6. Instruction trust
 

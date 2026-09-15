@@ -220,6 +220,8 @@ Frozen TaskSpec summary/hash
 
 과거 실패 Attempt의 원문은 필요할 때만 읽는다.
 
+rolling task summary는 task 종료 시 archive된다. 다음 Task의 기본 context로 이어지지 않는다. 세션 간 이어짐이 필요하면 [05-project-workspace-and-context.md](05-project-workspace-and-context.md) §9.1 Learned Memory와 그 승격 경로로만 다룬다.
+
 ## 14. 완료 조건
 
 Controller는 최소 다음을 확인한 뒤 DONE을 허용한다.

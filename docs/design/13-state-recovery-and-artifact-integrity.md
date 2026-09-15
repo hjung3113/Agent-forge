@@ -43,6 +43,12 @@ RUNNING -> TIMED_OUT | CANCELLED | LOST
 
 Controller만 canonical state transition을 기록한다.
 
+TaskSpec lifecycle([11-task-contract-and-change-control.md](11-task-contract-and-change-control.md) §3, `DRAFT -> NORMALIZED -> FROZEN`)은 artifact 상태이며 위 Task/Step/RunAttempt 상태와 별개 entity다. Task가 `READY`가 되려면 `FROZEN` TaskSpec(task_spec_hash)과 VerificationPlan이 이미 존재해야 하고, RunAttempt `CREATED`는 참조하는 task_spec_hash를 요구한다.
+
+### IntakeSession
+
+TaskSpec이 아직 없는 project-미지정 진입(cross-project briefing)은 Task/Step/RunAttempt 어디에도 속하지 않는 별도 entity다. TaskSpec 없음, worktree 없음, Attempt-retry/budget 모델 적용 없음. 출력은 `SuggestedTask[]` artifact다. 사용자 확인 후에만 이로부터 `11`의 DRAFT TaskSpec이 생성되고, 그 뒤부터 위 Task 상태 모델이 시작된다.
+
 ## 4. Atomic transition
 
 상태 전이는 SQLite transaction/CAS(version) 방식으로 중복/경합을 방지한다.
@@ -132,22 +138,25 @@ Canonical artifact namespace는 worktree와 분리한다.
 ```text
 ~/.agent-forge/
 ├─ state/agent-forge.db
-├─ tasks/T-001/
-└─ runs/R-001/
-   ├─ request.json
-   ├─ input-manifest.json
-   ├─ resolved-agent.yaml
-   ├─ resolved-harness.yaml
-   ├─ policy.json
-   ├─ prompt.md
-   ├─ stdout.log
-   ├─ stderr.log
-   ├─ diff.patch
-   ├─ checks/
-   ├─ output.md
-   ├─ artifact-manifest.json
-   └─ result.json
+└─ tasks/T-001/
+   └─ steps/S2/
+      └─ attempts/A2/
+         ├─ request.json
+         ├─ input-manifest.json
+         ├─ resolved-agent.yaml
+         ├─ resolved-harness.yaml
+         ├─ policy.json
+         ├─ prompt.md
+         ├─ stdout.log
+         ├─ stderr.log
+         ├─ diff.patch
+         ├─ checks/
+         ├─ output.md
+         ├─ artifact-manifest.json
+         └─ result.json
 ```
+
+경로는 Attempt id로 키를 잡는다. retry는 새 `attempts/A3/` 디렉터리를 만들 뿐 기존 Attempt의 evidence를 덮어쓰지 않는다. Step의 authoritative attempt 포인터(어떤 Attempt 결과가 유효한지)와 history(보존된 모든 과거 Attempt)는 서로 다른 개념이다 — 포인터는 state db가 가리키고, history는 이 경로 전체가 보존한다.
 
 이 store가 canonical이라는 뜻은 **Controller가 어떤 artifact를 state/evidence로 인정할지 결정한다**는 의미다.
 
@@ -159,7 +168,7 @@ Canonical artifact namespace는 worktree와 분리한다.
 storage_integrity_level: enforced | detectable | advisory
 ```
 
-또는 동일한 capability vocabulary를 기록한다.
+를 기록한다. 이 필드는 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §4의 capability enforcement level과 별도 3단계 vocabulary다 — storage integrity는 "능력이 존재하는가"가 아니라 "저장이 얼마나 강하게 보호되는가"를 표현하므로 `UNSUPPORTED`가 적용되지 않는다.
 
 ## 12. Artifact producer / provenance
 

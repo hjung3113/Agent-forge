@@ -51,10 +51,12 @@ Project Profile은 repository/context/registered commands/project policy를 소�
 ├─ state/
 │  └─ agent-forge.db
 ├─ tasks/
-└─ runs/
+│  └─ T-001/steps/S2/attempts/A2/   (Controller Artifact Store, 13 §11)
+└─ projects/
+   └─ <project-id>/memory/         (Learned Memory, §9.1)
 ```
 
-`tasks/`, `runs/`, `state/`는 Controller-owned 영역이다.
+`tasks/`, `state/`는 Controller-owned 영역이다. Attempt-keyed artifact 경로의 canonical 정의는 [13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md) §11을 따른다.
 
 ## 4. Workspace lifecycle
 
@@ -133,13 +135,7 @@ Project-local staging이 필요한 runtime도 있다.
 
 Controller는 실행 전 staging input의 hash를 trusted store에 기록한다.
 
-실행 결과의 canonical artifact는:
-
-```text
-~/.agent-forge/runs/<run-id>/
-```
-
-에 저장한다.
+실행 결과의 canonical artifact 경로는 [13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md) §11(Attempt-keyed layout)을 따른다.
 
 project repository 자체의 `.agent-forge/`가 architecture baseline 같은 source-controlled project config를 소유할 수 있지만, 그 변경은 policy-sensitive source change로 취급한다.
 
@@ -172,13 +168,7 @@ selection reason
 trust class
 ```
 
-Trust class 예:
-
-```text
-CONTROL
-TRUSTED_PROJECT_INSTRUCTION
-REFERENCE_CONTENT
-```
+Trust class의 canonical 정의는 [12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §6(`CONTROL / TRUSTED_PROJECT_INSTRUCTION / REFERENCE_CONTENT`)을 따른다.
 
 Repository 안의 임의 문서/주석은 자동으로 control instruction이 되지 않는다.
 
@@ -188,14 +178,14 @@ task/run artifact는 남지만 세션 간에 자동으로 이어붙는 layer는 
 
 저장:
 
-- 기본 project-scoped. `projects/<id>/memory/`
+- 기본 project-scoped. `~/.agent-forge/projects/<id>/memory/` (§3 local layout, Agent Forge 소스 repo의 `projects/`나 타깃 repo가 아니라 runtime store).
 - global 자유 영역은 두지 않는다. 전역화는 [10-skill-intake-portability-and-evaluation.md](10-skill-intake-portability-and-evaluation.md)의 승격 경로로만 가능하다.
 
 주입:
 
 - Tier 2 Selected로만 주입한다. always-on 금지.
-- compile-time에 resolve하고 사용한 entry의 revision을 이 절의 provenance 기록(경로/hash/선택 이유/trust class)에 pinning한다.
-- trust class는 ADVISORY로 취급한다. permission/output contract/hard policy를 override하지 못한다.
+- compile-time에 resolve하고 사용한 entry의 revision을 이 절의 provenance 기록(경로/hash/선택 이유)에 pinning한다.
+- instruction trust class([12-runtime-isolation-and-trust-boundaries.md](12-runtime-isolation-and-trust-boundaries.md) §6)는 `REFERENCE_CONTENT`, capability enforcement level(12 §4)은 `ADVISORY`로 취급한다 — 두 enum은 별개이며 어느 쪽으로도 permission/output contract/hard policy를 override하지 못한다.
 
 오염 방지:
 

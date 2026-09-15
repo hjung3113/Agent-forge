@@ -105,7 +105,7 @@ DRAFT
           -> REJECTED -> original spec remains
 ```
 
-RunAttempt 시작 시 반드시 특정 `task_spec_hash`를 참조한다.
+RunAttempt 시작 시 반드시 특정 `task_spec_hash`를 참조한다. FROZEN 이전의 intake/briefing 활동([13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md)의 IntakeSession)은 RunAttempt가 아니다.
 
 ## 4. 변경 권한
 

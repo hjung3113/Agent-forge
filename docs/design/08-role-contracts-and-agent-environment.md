@@ -46,7 +46,7 @@ TaskSpec = 이번 실행의 frozen 목표/scope/AC
 - permission grant
 - canonical state transition
 - DONE 기록
-- `user-briefing` Run에서 여러 project에 대한 구현 DelegateRequest 발행
+- `user-briefing` IntakeSession([13-state-recovery-and-artifact-integrity.md](13-state-recovery-and-artifact-integrity.md))에서 여러 project에 대한 구현 DelegateRequest 발행
 
 `user-briefing`은 별도 Role이 아니라 같은 Orchestrator Role의 다른 mode다. 이 기능은 기존 Role과 authority/write boundary가 다르지 않으므로 §2의 새 Role 추가 기준을 충족하지 않는다. mode 세부는 [04-orchestration-runtime.md](04-orchestration-runtime.md)의 Orchestrator modes를 따른다.
 
