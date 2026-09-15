@@ -1,0 +1,7 @@
+---
+status: accepted
+---
+
+# The first shippable slice excludes the Orchestrator; it is not "the MVP"
+
+`01-project-overview.md`'s success story ("Orchestrator selects the needed Agent...") and the roadmap's Phase 6 placement of the Orchestrator Worker appear to contradict each other about what ships first, which invites either overbuilding the Orchestrator before anything else works or quietly treating Phase 1 as sufficient. We resolve this explicitly: the first vertical slice is operator-as-orchestrator — a human (or a thin CLI, `agent-forge run --agent implementer --task-spec ...`) supplies or accepts a FROZEN TaskSpec and names a registered `agent_id` directly; Controller does everything from there (execute, admit, check, gate completion). `DelegateRequest` is a schema the CLI can fill without any LLM Orchestrator Worker existing. This is deliberately narrower than the documented MVP, which remains Phases 0–6 plus minimal Phase 7 and does include the Orchestrator. We chose this split because it is the concrete anti-scope-expansion move the architecture review asked for: it proves the Controller's contract/execution/completion guarantees end-to-end before any LLM is trusted to *choose* what runs, and it means Orchestrator quality problems can't block validating the harder, more load-bearing TCB work first. The cost is that "first shippable" and "MVP" are two different bars, and code/docs need to say which one they mean rather than using "MVP" for both.
