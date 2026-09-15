@@ -57,11 +57,11 @@ _Avoid_: authorization (더 넓은 개념), sandboxing
 _Avoid_: capability level alone (measured vs supported 구분이 없어짐)
 
 **TCB (Trusted Computing Base)**:
-Controller executable과 그 schema/transition/admission/completion 로직, 그리고 그 상태를 쓰는 저장 경로. 이 범위 밖의 registry YAML, Project Profile, pinned Skill은 승인·검증된 뒤에만 신뢰되는 입력(T1)이며, 그 자체로 TCB는 아니다.
+Controller executable과 그 schema/transition/admission/completion 로직, 그 상태를 쓰는 저장 경로, 그리고 그 저장 경로가 실제로 의존하는 SQLite 등 OS/runtime dependency까지 포함하는 범위. 이 범위 밖의 registry YAML, Project Profile, pinned Skill은 승인·검증된 뒤에만 신뢰되는 입력(T1)이며, 그 자체로 TCB는 아니다.
 _Avoid_: trusted zone, core (모호함)
 
 **Consumption lineage (consumes_artifacts / source_snapshot_ref)**:
-어떤 evidence artifact가 어떤 이전 Attempt·artifact·source snapshot을 실제로 참조했는지를 Controller가 구성해 기록한 정보. 이 lineage가 없으면 그 artifact에 의존하는 검증은 자동으로 재검증 대상(needs_revalidation)이 된다.
+어떤 evidence artifact가 어떤 이전 Attempt·artifact·source snapshot을 실제로 참조했는지를 Controller가 구성해 기록하려는 정보 단위. 이 lineage가 없을 때 의존 evidence를 정확히 어떻게 처리할지(예: needs_revalidation 자동 표시)는 아직 canonical schema에 반영되지 않은 write-down 항목이며, 이 문서는 그 최종 규칙을 확정하지 않는다.
 _Avoid_: provenance alone (더 넓은 개념), dependency
 
 **First vertical slice**:
@@ -73,5 +73,5 @@ _Avoid_: MVP (문서화된 MVP와 범위가 다름)
 _Avoid_: risk level, category
 
 **Policy-sensitive change**:
-architecture baseline, waiver, harness/test 설정처럼 그 자체가 검증 기준을 정의하는 파일에 대한 변경. 통상적인 source edit과 달리 별도의 authorization artifact 없이는 DONE의 근거가 될 수 없다.
+architecture baseline, waiver, harness/test 설정처럼 그 자체가 검증 기준을 정의하는 파일에 대한 변경. 통상적인 source edit과는 다른 승인 절차가 필요하다는 데는 합의가 있으나, 그 승인을 별도 authorization artifact로 강제하는 정확한 스키마는 아직 write-down 상태이며 canonical design에는 반영되지 않았다.
 _Avoid_: sensitive file, protected path
