@@ -1,0 +1,7 @@
+---
+status: accepted
+---
+
+# Safety Profile admission uses named required claims, not a numeric enforcement lattice
+
+The obvious way to gate execution on measured safety is a single ordering — ENFORCED > DETECTABLE > ADVISORY > UNSUPPORTED — and require a minimum level per capability. We rejected that: ADVISORY, DETECTABLE, and ENFORCED describe qualitatively different guarantees for different properties (a DETECTABLE filesystem write and a DETECTABLE network connection are not comparable), so treating "DETECTABLE" as always ≥ "ADVISORY" across every property produces false confidence and lets an operator accept a level for the wrong reason. Instead, a Safety Profile is a named System policy object holding a list of required claims, each `{property, threat_model_ref, acceptable_levels: [...]}` — an explicit set of levels the policy will accept for that specific property, not a point on a shared scale. Admission requires every required claim to have a matching, supported claim in the execution's capability report whose level is in that property's `acceptable_levels` set. Project policy may only add required claims or narrow an `acceptable_levels` set (tighten); it may never substitute an easier requirement for a System one, and profile selection itself cannot become a downgrade. This costs more upfront specification work (every property needs its own acceptable-levels decision instead of one global minimum) in exchange for never silently comparing incomparable guarantees.
